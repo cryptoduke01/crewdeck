@@ -112,10 +112,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         agencyName,
       });
 
+      // Check if user already has an agency (prevent duplicates)
+      const { data: existingAgency } = await supabase
+        .from("agencies")
+        .select("id")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+
+      if (existingAgency) {
+        return { 
+          error: new Error(
+            "You already have an agency profile. Please edit your existing profile instead."
+          ) 
+        };
+      }
+
       // Make slug unique by appending user ID suffix if needed
       const uniqueSlug = `${baseSlug}-${data.user.id.substring(0, 8)}`;
 
       // Try to create agency directly (works if email confirmation is disabled)
+      // The trigger will also try to create it, but we check for duplicates first
       const { error: agencyError } = await supabase.from("agencies").insert({
         name: agencyName,
         slug: uniqueSlug,
@@ -125,43 +141,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user_id: data.user.id,
       });
 
-      // If RLS fails, wait a bit and try again (user might be authenticated now)
-      // Or the trigger will handle it
+      // If RLS fails, the trigger will handle it (it also checks for duplicates)
       if (agencyError) {
-        if (agencyError.message?.includes('row-level security') || agencyError.message?.includes('duplicate')) {
-          // Wait 1 second and try again (in case user got authenticated)
-          await new Promise(resolve => setTimeout(resolve, 1000));
+        if (agencyError.message?.includes('row-level security')) {
+          // Trigger will handle it - don't error
+          console.log("Agency creation will be handled by trigger");
+        } else if (agencyError.message?.includes('duplicate') || agencyError.message?.includes('already exists')) {
+          // Agency already exists (maybe trigger created it)
+          // Check again to confirm
+          const { data: checkAgency } = await supabase
+            .from("agencies")
+            .select("id")
+            .eq("user_id", data.user.id)
+            .maybeSingle();
           
-          // Try with unique slug
-          const { error: retryError } = await supabase.from("agencies").insert({
-            name: agencyName,
-            slug: uniqueSlug,
-            email: email,
-            niche: "Web3",
-            verified: false,
-            user_id: data.user.id,
-          });
-
-          if (retryError && !retryError.message?.includes('duplicate')) {
-            // If still fails (and not duplicate), trigger should handle it
-            console.warn("Agency creation failed, trigger should handle it:", retryError);
-            // Don't return error - trigger will create it
+          if (!checkAgency) {
+            // Still doesn't exist, might be slug conflict
+            const timestampSlug = `${baseSlug}-${Date.now().toString().slice(-6)}`;
+            const { error: timestampError } = await supabase.from("agencies").insert({
+              name: agencyName,
+              slug: timestampSlug,
+              email: email,
+              niche: "Web3",
+              verified: false,
+              user_id: data.user.id,
+            });
+            
+            if (timestampError && !timestampError.message?.includes('row-level security')) {
+              return { error: timestampError };
+            }
           }
-        } else if (agencyError.message?.includes('duplicate')) {
-          // Slug conflict - try with timestamp
-          const timestampSlug = `${baseSlug}-${Date.now().toString().slice(-6)}`;
-          const { error: timestampError } = await supabase.from("agencies").insert({
-            name: agencyName,
-            slug: timestampSlug,
-            email: email,
-            niche: "Web3",
-            verified: false,
-            user_id: data.user.id,
-          });
-          
-          if (timestampError && !timestampError.message?.includes('row-level security')) {
-            return { error: timestampError };
-          }
+          // If checkAgency exists, trigger already created it - that's fine
         } else {
           // Other error - return it
           return { error: agencyError };

@@ -20,8 +20,9 @@ BEGIN
   agency_name_val := NEW.raw_user_meta_data->>'agency_name';
   agency_slug_val := NEW.raw_user_meta_data->>'agency_slug';
   
-  -- Only create agency if name is provided and doesn't exist
+  -- Only create agency if name is provided and user doesn't already have one
   IF agency_name_val IS NOT NULL AND agency_name_val != '' THEN
+    -- Check if user already has an agency (prevent duplicates)
     IF NOT EXISTS (
       SELECT 1 FROM agencies WHERE user_id = NEW.id
     ) THEN

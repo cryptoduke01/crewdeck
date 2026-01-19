@@ -132,6 +132,23 @@ export default function EditProfilePage() {
         : `${baseSlug}-${user.id.substring(0, 8)}-${Date.now().toString().slice(-6)}`;
 
       if (isCreating) {
+        // Check if user already has an agency (prevent duplicates)
+        const { data: existingAgency } = await supabase
+          .from("agencies")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (existingAgency) {
+          showError(
+            "Agency already exists",
+            "You already have an agency profile. Please refresh the page to edit it."
+          );
+          await refetch();
+          router.push("/dashboard/agency");
+          return;
+        }
+
         // Create new agency
         const { data: newAgency, error: createError } = await supabase
           .from("agencies")
@@ -153,7 +170,19 @@ export default function EditProfilePage() {
           .select()
           .single();
 
-        if (createError) throw createError;
+        if (createError) {
+          // Check if error is due to duplicate user_id
+          if (createError.message?.includes('duplicate') || createError.message?.includes('unique') || createError.message?.includes('already exists')) {
+            showError(
+              "Agency already exists",
+              "You already have an agency profile. Please refresh the page to edit it."
+            );
+            await refetch();
+            router.push("/dashboard/agency");
+            return;
+          }
+          throw createError;
+        }
 
         // Update services for new agency
         if (services.length > 0 && newAgency) {
