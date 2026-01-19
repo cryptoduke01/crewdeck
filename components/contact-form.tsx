@@ -7,6 +7,8 @@ import { LoadingSpinner } from "@/components/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { analytics } from "@/lib/analytics/client";
+import { useToast } from "@/lib/toast/context";
+import { sendNewMessageNotification } from "@/lib/email/utils";
 
 interface ContactFormProps {
   agencyId: string;
@@ -24,32 +26,13 @@ export function ContactForm({ agencyId, agencyName, onSuccess }: ContactFormProp
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { success: showSuccess, error: showError } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      if (!supabaseUrl || !supabaseKey || supabaseUrl === "your_supabase_project_url") {
-        // Fallback - just show success for demo
-        setTimeout(() => {
-          setSuccess(true);
-          setLoading(false);
-          analytics.track("Contact Form Submitted", {
-            agencyId,
-            agencyName,
-            formType: "demo",
-          });
-          if (onSuccess) onSuccess();
-        }, 1000);
-        return;
-      }
-
       const supabase = createSupabaseClient();
 
       const contactInfo = [
@@ -59,45 +42,68 @@ export function ContactForm({ agencyId, agencyName, onSuccess }: ContactFormProp
         `Project Type: ${formData.projectType || "Not specified"}`,
       ].filter(Boolean).join("\n");
 
-      const { error: insertError } = await supabase
+      const fullMessageContent = `${contactInfo}\n\nMessage:\n${formData.message}`;
+
+      // Insert message into database
+      const { error: insertError, data: messageData } = await supabase
         .from("messages")
         .insert({
           agency_id: agencyId,
-          content: `${contactInfo}\n\nMessage:\n${formData.message}`,
-          sender_id: formData.email, // Using email as sender ID for now
-        });
+          content: fullMessageContent,
+          sender_id: formData.email,
+        })
+        .select();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error("Error inserting message:", insertError);
+        // Check if it's an RLS error
+        if (insertError.message?.includes('row-level security') || insertError.message?.includes('policy')) {
+          throw new Error("Unable to send message. The agency may not be verified yet.");
+        }
+        throw new Error(insertError.message || "Failed to send message");
+      }
+
+      if (!messageData || messageData.length === 0) {
+        throw new Error("Message was not saved. Please try again.");
+      }
 
       // Fetch agency email to send notification
-      const { data: agencyData } = await supabase
+      const { data: agencyData, error: fetchError } = await supabase
         .from("agencies")
         .select("email")
         .eq("id", agencyId)
         .single();
 
+      if (fetchError) {
+        console.error("Error fetching agency email:", fetchError);
+        // Don't throw - message was saved, just email notification failed
+      }
+
       // Send email notification to agency (non-blocking)
       if (agencyData?.email) {
-        const messageUrl = `${window.location.origin}/dashboard/agency/messages`;
-        const messagePreview = formData.message.substring(0, 200);
-        
-        // Import and use email utility
-        import("@/lib/email/utils").then(({ sendNewMessageNotification }) => {
-          sendNewMessageNotification(
+        try {
+          const messageUrl = typeof window !== "undefined" 
+            ? `${window.location.origin}/dashboard/agency/messages`
+            : `/dashboard/agency/messages`;
+          const messagePreview = formData.message.substring(0, 200);
+          
+          await sendNewMessageNotification(
             agencyData.email,
             agencyName,
             formData.name,
             messagePreview,
             messageUrl
-          ).catch((err) => {
-            console.error("Failed to send email notification:", err);
-            // Don't block the form submission if email fails
-          });
-        });
+          );
+        } catch (emailErr) {
+          console.error("Failed to send email notification:", emailErr);
+          // Don't block the form submission if email fails
+        }
       }
 
       setSuccess(true);
       setFormData({ name: "", email: "", message: "", projectType: "", xHandle: "" });
+      
+      showSuccess("Message sent!", `${agencyName} will get back to you soon.`);
       
       analytics.track("Contact Form Submitted", {
         agencyId,
@@ -106,7 +112,9 @@ export function ContactForm({ agencyId, agencyName, onSuccess }: ContactFormProp
 
       if (onSuccess) onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send message");
+      console.error("Error sending message:", err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to send message";
+      showError("Failed to send message", errorMessage);
     } finally {
       setLoading(false);
     }
@@ -140,12 +148,6 @@ export function ContactForm({ agencyId, agencyName, onSuccess }: ContactFormProp
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <div className="p-3 rounded-lg border border-destructive/50 bg-destructive/10 text-sm text-destructive">
-          {error}
-        </div>
-      )}
-
       <div className="space-y-2">
         <label htmlFor="name" className="text-sm font-medium text-foreground/80">
           Your name

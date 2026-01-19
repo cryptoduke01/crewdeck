@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { 
   Search, 
   TrendingUp, 
@@ -14,11 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
 import Link from "next/link";
-import { useAgencies } from "@/hooks/use-agencies";
-
 export default function Home() {
-  // Fetch featured agencies
-  const { agencies: featuredAgencies } = useAgencies({ sortBy: "rating" });
+  // Removed unnecessary data fetching - homepage doesn't display agencies
 
   return (
     <div className="min-h-screen bg-background">
@@ -28,45 +24,35 @@ export default function Home() {
       <section className="relative pt-32 pb-24 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
           <div className="text-center">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+            <h1
               className="text-4xl sm:text-5xl lg:text-6xl font-semibold mb-6 leading-tight tracking-tight"
             >
               The Marketing <span className="whitespace-nowrap">Agency Aggregator</span>
               <br />
               <span className="text-foreground/80">for Web3 Projects</span>
-            </motion.h1>
+            </h1>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-lg text-foreground/60 max-w-2xl mx-auto mb-10"
+            <p
+              className="text-base sm:text-lg text-foreground/60 max-w-2xl mx-auto mb-10 px-2"
             >
               Browse vetted marketing agencies all in one place. Compare services, portfolios, pricing, and reviews to find the right agency for your project.
-            </motion.p>
+            </p>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+            <div
               className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20"
             >
-              <Link href="/agencies" className="cursor-pointer">
-                <Button size="lg" className="group cursor-pointer">
+              <Link href="/agencies" className="cursor-pointer w-full sm:w-auto">
+                <Button size="lg" className="group cursor-pointer w-full sm:w-auto">
                   Browse Agencies
                   <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Link href="/agencies" className="cursor-pointer">
-                <Button size="lg" variant="outline" className="gap-2 cursor-pointer">
-                  <Search className="h-4 w-4" />
-                  Search
+              <Link href="/auth/signup" className="cursor-pointer w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="cursor-pointer w-full sm:w-auto">
+                  Join as Agency
                 </Button>
               </Link>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
@@ -74,11 +60,7 @@ export default function Home() {
       {/* Features Section */}
       <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 border-t border-border">
         <div className="mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+          <div
             className="text-center mb-16"
           >
             <h2 className="text-3xl sm:text-4xl font-semibold mb-4">
@@ -87,7 +69,7 @@ export default function Home() {
             <p className="text-base text-foreground/60 max-w-2xl mx-auto">
               Save time and make better decisions by comparing agencies in one place.
             </p>
-          </motion.div>
+          </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
@@ -122,29 +104,22 @@ export default function Home() {
                 description: "Browse real work and case studies. See actual results before making a decision.",
               },
             ].map((feature, index) => (
-              <motion.div
+              <div
                 key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.08 }}
-                whileHover={{ y: -4, scale: 1.02 }}
                 className="p-6 rounded-lg border border-border bg-card hover:border-foreground/30 transition-all cursor-default group"
               >
                 <div className="flex items-center gap-4 mb-4">
-                  <motion.div 
+                  <div 
                     className="p-2 rounded-md bg-muted group-hover:bg-foreground/10 transition-colors"
-                    whileHover={{ rotate: [0, -5, 5, -5, 0], scale: 1.1 }}
-                    transition={{ duration: 0.5 }}
                   >
                     <feature.icon className="h-5 w-5 group-hover:text-foreground transition-colors" />
-                  </motion.div>
+                  </div>
                   <h3 className="text-lg font-medium">{feature.title}</h3>
                 </div>
                 <p className="text-sm text-foreground/60 leading-relaxed">
                   {feature.description}
                 </p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -153,11 +128,7 @@ export default function Home() {
       {/* How It Works Section */}
       <section id="how-it-works" className="py-24 px-4 sm:px-6 lg:px-8 border-t border-border bg-muted/30">
         <div className="mx-auto max-w-5xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+          <div
             className="text-center mb-16"
           >
             <h2 className="text-3xl sm:text-4xl font-semibold mb-4">
@@ -166,7 +137,7 @@ export default function Home() {
             <p className="text-base text-foreground/60 max-w-2xl mx-auto">
               Find and connect with the perfect marketing agency in three steps.
             </p>
-          </motion.div>
+          </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
@@ -189,32 +160,25 @@ export default function Home() {
                 icon: ArrowRight,
               },
             ].map((step, index) => (
-              <motion.div
+              <div
                 key={step.step}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.15 }}
-                whileHover={{ y: -4 }}
                 className="relative group"
               >
                 <div className="p-6 rounded-lg border border-border bg-card hover:border-foreground/30 transition-all">
                   <div className="text-xs font-medium text-foreground/40 mb-4">
                     {step.step}
                   </div>
-                  <motion.div 
+                  <div 
                     className="mb-4"
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    transition={{ type: "spring", stiffness: 300 }}
                   >
                     <step.icon className="h-6 w-6 text-foreground/60 group-hover:text-foreground transition-colors" />
-                  </motion.div>
+                  </div>
                   <h3 className="text-lg font-medium mb-3">{step.title}</h3>
                   <p className="text-sm text-foreground/60 leading-relaxed">
                     {step.description}
                   </p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -222,11 +186,7 @@ export default function Home() {
 
       {/* CTA Section */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 border-t border-border">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+        <div
           className="mx-auto max-w-3xl text-center"
         >
           <h2 className="text-3xl sm:text-4xl font-semibold mb-4">
@@ -246,7 +206,7 @@ export default function Home() {
               Join as Agency
             </Button>
           </div>
-        </motion.div>
+        </div>
       </section>
 
       {/* Footer */}

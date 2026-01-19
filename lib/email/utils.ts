@@ -19,8 +19,16 @@ export async function sendNewMessageNotification(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.error || "Failed to send email");
+    let errorMessage = "Failed to send email";
+    try {
+      const errorData = await response.json();
+      errorMessage = typeof errorData === 'string' 
+        ? errorData 
+        : errorData?.error || errorData?.message || JSON.stringify(errorData) || "Failed to send email";
+    } catch {
+      errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+    }
+    throw new Error(errorMessage);
   }
 
   return response.json();
@@ -46,8 +54,16 @@ export async function sendNewReviewNotification(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.error || "Failed to send email");
+    let errorMessage = "Failed to send email";
+    try {
+      const errorData = await response.json();
+      errorMessage = typeof errorData === 'string' 
+        ? errorData 
+        : errorData?.error || errorData?.message || JSON.stringify(errorData) || "Failed to send email";
+    } catch {
+      errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+    }
+    throw new Error(errorMessage);
   }
 
   return response.json();
@@ -70,8 +86,16 @@ export async function sendWelcomeEmail(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.error || "Failed to send email");
+    let errorMessage = "Failed to send email";
+    try {
+      const errorData = await response.json();
+      errorMessage = typeof errorData === 'string' 
+        ? errorData 
+        : errorData?.error || errorData?.message || JSON.stringify(errorData) || "Failed to send email";
+    } catch {
+      errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+    }
+    throw new Error(errorMessage);
   }
 
   return response.json();

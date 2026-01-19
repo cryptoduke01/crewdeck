@@ -7,12 +7,28 @@ export function SiteLoader() {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    // Hide loader after page loads
-    const timer = setTimeout(() => {
-      setIsVisible(false);
-    }, 3000);
+    // Hide loader quickly - minimum 800ms for animation, but hide as soon as page is ready
+    const minDisplayTime = 800;
+    const startTime = Date.now();
 
-    return () => clearTimeout(timer);
+    const hideLoader = () => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, minDisplayTime - elapsed);
+      
+      setTimeout(() => {
+        setIsVisible(false);
+      }, remaining);
+    };
+
+    // Hide when DOM is ready
+    if (document.readyState === 'complete') {
+      hideLoader();
+    } else {
+      window.addEventListener('load', hideLoader);
+      return () => {
+        window.removeEventListener('load', hideLoader);
+      };
+    }
   }, []);
 
   if (!isVisible) return null;
@@ -40,11 +56,11 @@ export function SiteLoader() {
                 rotateX: 0,
               }}
               transition={{
-                delay: index * 0.1,
-                duration: 0.6,
+                delay: index * 0.05,
+                duration: 0.4,
                 type: "spring",
-                stiffness: 200,
-                damping: 15,
+                stiffness: 300,
+                damping: 20,
               }}
               className="text-5xl sm:text-6xl md:text-7xl font-semibold text-foreground inline-block"
               style={{
@@ -88,7 +104,7 @@ export function SiteLoader() {
             initial={{ width: "0%" }}
             animate={{ width: "100%" }}
             transition={{
-              duration: 2,
+              duration: 0.8,
               ease: "easeInOut",
             }}
           />

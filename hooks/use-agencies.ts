@@ -108,36 +108,45 @@ export function useAgencies(options?: {
 
           if (queryError) throw queryError;
 
-          // Fetch services for each agency
-          const agenciesWithServices = await Promise.all(
-            (data || []).map(async (agency: any) => {
-              const { data: servicesData } = await supabase
-                .from("services")
-                .select("name")
-                .eq("agency_id", agency.id);
+          // Fetch all services in one query (fixes N+1 problem)
+          const agencyIds = (data || []).map((a: any) => a.id);
+          let servicesMap: Record<string, string[]> = {};
+          
+          if (agencyIds.length > 0) {
+            const { data: allServices } = await supabase
+              .from("services")
+              .select("agency_id, name")
+              .in("agency_id", agencyIds);
 
-              const services = servicesData?.map((s: any) => s.name) || [];
+            // Group services by agency_id
+            servicesMap = (allServices || []).reduce((acc: Record<string, string[]>, service: any) => {
+              if (!acc[service.agency_id]) {
+                acc[service.agency_id] = [];
+              }
+              acc[service.agency_id].push(service.name);
+              return acc;
+            }, {});
+          }
 
-              return {
-                id: agency.id,
-                name: agency.name,
-                niche: agency.niche,
-                rating: parseFloat(agency.rating) || 0,
-                reviews: agency.review_count || 0,
-                location: agency.location || "Remote",
-                services: services,
-                priceRange: agency.price_range_min && agency.price_range_max
-                  ? `$${agency.price_range_min.toLocaleString()} - $${agency.price_range_max.toLocaleString()}`
-                  : "Contact for pricing",
-                priceRangeMin: agency.price_range_min,
-                priceRangeMax: agency.price_range_max,
-                verified: agency.verified || false,
-                description: agency.description,
-                website: agency.website,
-                email: agency.email,
-              };
-            })
-          );
+          // Transform agencies with services from map
+          const agenciesWithServices = (data || []).map((agency: any) => ({
+            id: agency.id,
+            name: agency.name,
+            niche: agency.niche,
+            rating: parseFloat(agency.rating) || 0,
+            reviews: agency.review_count || 0,
+            location: agency.location || "Remote",
+            services: servicesMap[agency.id] || [],
+            priceRange: agency.price_range_min && agency.price_range_max
+              ? `$${agency.price_range_min.toLocaleString()} - $${agency.price_range_max.toLocaleString()}`
+              : "Contact for pricing",
+            priceRangeMin: agency.price_range_min,
+            priceRangeMax: agency.price_range_max,
+            verified: agency.verified || false,
+            description: agency.description,
+            website: agency.website,
+            email: agency.email,
+          }));
 
           // Filter by services if specified
           let filteredAgencies = agenciesWithServices;
