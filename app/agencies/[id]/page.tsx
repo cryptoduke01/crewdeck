@@ -13,6 +13,7 @@ import {
   Users,
   Award,
   ArrowLeft,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
@@ -131,9 +132,15 @@ export default function AgencyProfilePage() {
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.1 + index * 0.05 }}
-                  className="p-4 rounded-lg border border-border bg-card"
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  className="p-4 rounded-lg border border-border bg-card hover:border-foreground/30 transition-all group"
                 >
-                  <stat.icon className="h-5 w-5 text-foreground/40 mb-2" />
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <stat.icon className="h-5 w-5 text-foreground/40 mb-2 group-hover:text-foreground transition-colors" />
+                  </motion.div>
                   <div className="text-xl font-semibold mb-1">{stat.value}</div>
                   <div className="text-xs text-foreground/50">{stat.label}</div>
                 </motion.div>
@@ -191,10 +198,16 @@ export default function AgencyProfilePage() {
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.3, delay: index * 0.03 }}
-                    className="p-3 rounded-lg border border-border bg-card hover:border-foreground/20 transition-colors"
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    className="p-3 rounded-lg border border-border bg-card hover:border-foreground/30 transition-all group cursor-default"
                   >
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-foreground/40" />
+                      <motion.div
+                        whileHover={{ rotate: [0, -10, 10, 0] }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <CheckCircle2 className="h-4 w-4 text-foreground/40 group-hover:text-foreground transition-colors" />
+                      </motion.div>
                       <span className="text-sm font-medium">{service}</span>
                     </div>
                   </motion.div>
@@ -209,7 +222,7 @@ export default function AgencyProfilePage() {
           )}
 
           {/* Portfolio Section */}
-          {agency.portfolio && agency.portfolio.length > 0 && (
+          {agency.portfolio && agency.portfolio.length > 0 ? (
             <motion.section
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -221,24 +234,34 @@ export default function AgencyProfilePage() {
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {agency.portfolio.map((project, index) => (
                   <motion.div
-                    key={project.id}
+                    key={project.id || index}
                     initial={{ opacity: 0, y: 15 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.4, delay: index * 0.08 }}
-                    whileHover={{ y: -4 }}
-                    className="group relative p-5 rounded-lg border border-border bg-card hover:border-foreground/20 transition-all"
+                    whileHover={{ y: -6, scale: 1.02 }}
+                    className="group relative p-5 rounded-lg border border-border bg-card hover:border-foreground/30 hover:shadow-lg transition-all cursor-default"
                   >
-                    {project.image && (
-                      <div className="mb-3 rounded-lg overflow-hidden border border-border">
+                    {project.image ? (
+                      <div className="mb-3 rounded-lg overflow-hidden border border-border bg-muted">
                         <img
                           src={project.image}
-                          alt={project.title}
+                          alt={project.title || "Portfolio item"}
                           className="w-full h-48 object-cover"
+                          onError={(e) => {
+                            // Hide broken images
+                            e.currentTarget.style.display = 'none';
+                          }}
                         />
                       </div>
+                    ) : (
+                      <div className="mb-3 rounded-lg border border-border bg-muted h-48 flex items-center justify-center">
+                        <ImageIcon className="h-12 w-12 text-foreground/20" />
+                      </div>
                     )}
-                    <h3 className="text-lg font-medium mb-2">{project.title}</h3>
+                    {project.title && (
+                      <h3 className="text-lg font-medium mb-2">{project.title}</h3>
+                    )}
                     {project.description && (
                       <p className="text-sm text-foreground/60 mb-3 leading-relaxed">{project.description}</p>
                     )}
@@ -252,7 +275,7 @@ export default function AgencyProfilePage() {
                 ))}
               </div>
             </motion.section>
-          )}
+          ) : null}
 
           {/* Contact Section */}
           <motion.section

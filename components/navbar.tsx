@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Moon, Sun } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
@@ -17,6 +17,17 @@ export function Navbar() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
   return (
     <motion.nav
@@ -103,45 +114,75 @@ export function Navbar() {
           </div>
         </div>
 
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden py-4 space-y-4 border-t border-border"
-          >
-            <Link
-              href="/agencies"
-              className="block text-sm font-medium text-foreground/70 hover:text-foreground cursor-pointer"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Aggregator
-            </Link>
-            {!authLoading && (
-              user ? (
-                <Link href="/dashboard/agency" onClick={() => setMobileMenuOpen(false)}>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="w-full cursor-pointer"
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden"
+                onClick={() => setMobileMenuOpen(false)}
+              />
+              <motion.div
+                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{ 
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 30,
+                  duration: 0.3
+                }}
+                className="md:hidden py-4 space-y-4 border-t border-border relative z-50 bg-background"
+              >
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <Link
+                    href="/agencies"
+                    className="block text-sm font-medium text-foreground/70 hover:text-foreground transition-colors cursor-pointer py-2"
+                    onClick={() => setMobileMenuOpen(false)}
                   >
-                    Dashboard
-                  </Button>
-                </Link>
-              ) : (
-                <Link href="/auth/signup" onClick={() => setMobileMenuOpen(false)}>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="w-full cursor-pointer"
+                    Aggregator
+                  </Link>
+                </motion.div>
+                {!authLoading && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 }}
                   >
-                    Join as Agency
-                  </Button>
-                </Link>
-              )
-            )}
-          </motion.div>
-        )}
+                    {user ? (
+                      <Link href="/dashboard/agency" onClick={() => setMobileMenuOpen(false)}>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="w-full cursor-pointer"
+                        >
+                          Dashboard
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Link href="/auth/signup" onClick={() => setMobileMenuOpen(false)}>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="w-full cursor-pointer"
+                        >
+                          Join as Agency
+                        </Button>
+                      </Link>
+                    )}
+                  </motion.div>
+                )}
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
     </motion.nav>
   );

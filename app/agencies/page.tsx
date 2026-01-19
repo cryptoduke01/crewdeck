@@ -297,10 +297,10 @@ export default function AgenciesPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
-                  whileHover={{ y: -4 }}
+                  whileHover={{ y: -6, scale: 1.01 }}
                   className="group"
                 >
-                  <div className="relative p-6 rounded-lg border border-border bg-card hover:border-foreground/20 transition-all h-full flex flex-col">
+                  <div className="relative p-6 rounded-lg border border-border bg-card hover:border-foreground/30 hover:shadow-lg transition-all h-full flex flex-col">
                     {/* Header */}
                     <div className="mb-4">
                       <div className="flex items-start justify-between mb-2">

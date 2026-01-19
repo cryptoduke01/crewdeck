@@ -91,14 +91,39 @@ export function useAgency(id: string) {
             .select("*")
             .eq("agency_id", id)
             .order("created_at", { ascending: false });
-
-          const portfolio: PortfolioItem[] = (portfolioData || []).map((p: any) => ({
-            id: p.id,
-            title: p.title,
-            description: p.description,
-            metrics: p.metrics,
-            image: p.image,
-          }));
+          
+          const portfolio: PortfolioItem[] = (portfolioData || []).map((p: any) => {
+            // Ensure image URL is properly formatted
+            let imageUrl = p.image || '';
+            
+            // If image URL exists but doesn't start with http, it might be a storage path
+            if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+              // Try to get public URL from storage
+              try {
+                if (imageUrl.includes('portfolio-images/') || imageUrl.includes('/')) {
+                  // Extract the path after the bucket name
+                  const pathParts = imageUrl.split('portfolio-images/');
+                  const storagePath = pathParts.length > 1 ? pathParts[1] : imageUrl;
+                  const { data: { publicUrl } } = supabase.storage
+                    .from("portfolio-images")
+                    .getPublicUrl(storagePath);
+                  imageUrl = publicUrl;
+                }
+              } catch (err) {
+                console.warn("Could not generate public URL for image:", imageUrl);
+                // Keep original URL or set to empty
+                imageUrl = '';
+              }
+            }
+            
+            return {
+              id: p.id,
+              title: p.title || '',
+              description: p.description || '',
+              metrics: p.metrics || '',
+              image: imageUrl,
+            };
+          });
 
           // Fetch reviews
           const { data: reviewsData } = await supabase

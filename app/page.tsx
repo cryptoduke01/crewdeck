@@ -124,12 +124,17 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: index * 0.08 }}
-                className="p-6 rounded-lg border border-border bg-card hover:border-foreground/20 transition-colors cursor-default"
+                whileHover={{ y: -4, scale: 1.02 }}
+                className="p-6 rounded-lg border border-border bg-card hover:border-foreground/30 transition-all cursor-default group"
               >
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="p-2 rounded-md bg-muted">
-                    <feature.icon className="h-5 w-5" />
-                  </div>
+                  <motion.div 
+                    className="p-2 rounded-md bg-muted group-hover:bg-foreground/10 transition-colors"
+                    whileHover={{ rotate: [0, -5, 5, -5, 0], scale: 1.1 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <feature.icon className="h-5 w-5 group-hover:text-foreground transition-colors" />
+                  </motion.div>
                   <h3 className="text-lg font-medium">{feature.title}</h3>
                 </div>
                 <p className="text-sm text-foreground/60 leading-relaxed">
@@ -186,15 +191,20 @@ export default function Home() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.15 }}
-                className="relative"
+                whileHover={{ y: -4 }}
+                className="relative group"
               >
-                <div className="p-6 rounded-lg border border-border bg-card">
+                <div className="p-6 rounded-lg border border-border bg-card hover:border-foreground/30 transition-all">
                   <div className="text-xs font-medium text-foreground/40 mb-4">
                     {step.step}
                   </div>
-                  <div className="mb-4">
-                    <step.icon className="h-6 w-6 text-foreground/60" />
-                  </div>
+                  <motion.div 
+                    className="mb-4"
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <step.icon className="h-6 w-6 text-foreground/60 group-hover:text-foreground transition-colors" />
+                  </motion.div>
                   <h3 className="text-lg font-medium mb-3">{step.title}</h3>
                   <p className="text-sm text-foreground/60 leading-relaxed">
                     {step.description}

@@ -158,10 +158,16 @@ export default function AgencyDashboardPage() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.1 }}
-              className="p-6 rounded-lg border border-border bg-card"
+              whileHover={{ scale: 1.05, y: -4 }}
+              className="p-6 rounded-lg border border-border bg-card hover:border-foreground/30 hover:shadow-lg transition-all group cursor-default"
             >
               <div className="flex items-center gap-3 mb-2">
-                <Eye className="h-5 w-5 text-foreground/40" />
+                <motion.div
+                  whileHover={{ rotate: [0, -5, 5, 0], scale: 1.1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Eye className="h-5 w-5 text-foreground/40 group-hover:text-foreground transition-colors" />
+                </motion.div>
                 <span className="text-sm font-medium text-foreground/60">Profile views</span>
               </div>
               <div className="text-2xl font-semibold">{stats.views}</div>
@@ -172,10 +178,16 @@ export default function AgencyDashboardPage() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.15 }}
-              className="p-6 rounded-lg border border-border bg-card"
+              whileHover={{ scale: 1.05, y: -4 }}
+              className="p-6 rounded-lg border border-border bg-card hover:border-foreground/30 hover:shadow-lg transition-all group cursor-default"
             >
               <div className="flex items-center gap-3 mb-2">
-                <Mail className="h-5 w-5 text-foreground/40" />
+                <motion.div
+                  whileHover={{ rotate: [0, -5, 5, 0], scale: 1.1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Mail className="h-5 w-5 text-foreground/40 group-hover:text-foreground transition-colors" />
+                </motion.div>
                 <span className="text-sm font-medium text-foreground/60">Messages</span>
               </div>
               <div className="text-2xl font-semibold">{stats.messages}</div>
@@ -186,10 +198,16 @@ export default function AgencyDashboardPage() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
-              className="p-6 rounded-lg border border-border bg-card"
+              whileHover={{ scale: 1.05, y: -4 }}
+              className="p-6 rounded-lg border border-border bg-card hover:border-foreground/30 hover:shadow-lg transition-all group cursor-default"
             >
               <div className="flex items-center gap-3 mb-2">
-                <TrendingUp className="h-5 w-5 text-foreground/40" />
+                <motion.div
+                  whileHover={{ rotate: [0, -5, 5, 0], scale: 1.1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <TrendingUp className="h-5 w-5 text-foreground/40 group-hover:text-foreground transition-colors" />
+                </motion.div>
                 <span className="text-sm font-medium text-foreground/60">Rating</span>
               </div>
               <div className="text-2xl font-semibold">

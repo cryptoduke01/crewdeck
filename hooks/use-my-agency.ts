@@ -33,11 +33,22 @@ export function useMyAgency() {
 
         // Log for debugging
         if (agencyError) {
-          console.error("Error fetching agency:", agencyError);
-          // If it's a "no rows" error, that's okay
-          if (agencyError.code !== 'PGRST116') {
-            throw agencyError;
+          // If it's a "no rows" error, that's okay - user just doesn't have an agency yet
+          if (agencyError.code === 'PGRST116' || agencyError.message?.includes('No rows')) {
+            // This is expected - user doesn't have an agency yet
+            setAgency(null);
+            setLoading(false);
+            return;
           }
+          // For other errors, log and throw
+          console.error("Error fetching agency:", {
+            message: agencyError.message,
+            code: agencyError.code,
+            details: agencyError.details,
+            hint: agencyError.hint,
+            fullError: agencyError
+          });
+          throw agencyError;
         }
 
         // Also log what we found
@@ -83,8 +94,18 @@ export function useMyAgency() {
           setAgency(null);
         }
       } catch (err) {
-        console.error("Error fetching agency:", err);
-        setError(err instanceof Error ? err.message : "Failed to fetch agency");
+        // Better error logging
+        if (err instanceof Error) {
+          console.error("Error fetching agency:", err.message, err);
+          setError(err.message);
+        } else if (err && typeof err === 'object') {
+          const errorMessage = JSON.stringify(err);
+          console.error("Error fetching agency:", errorMessage, err);
+          setError(errorMessage || "Failed to fetch agency");
+        } else {
+          console.error("Error fetching agency:", String(err), err);
+          setError("Failed to fetch agency");
+        }
       } finally {
         setLoading(false);
       }
@@ -148,7 +169,18 @@ export function useMyAgency() {
         setAgency(null);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch agency");
+      // Better error logging
+      if (err instanceof Error) {
+        console.error("Error refetching agency:", err.message, err);
+        setError(err.message);
+      } else if (err && typeof err === 'object') {
+        const errorMessage = JSON.stringify(err);
+        console.error("Error refetching agency:", errorMessage, err);
+        setError(errorMessage || "Failed to fetch agency");
+      } else {
+        console.error("Error refetching agency:", String(err), err);
+        setError("Failed to fetch agency");
+      }
       setAgency(null);
     } finally {
       setLoading(false);
