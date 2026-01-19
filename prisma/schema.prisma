@@ -1,0 +1,98 @@
+// Prisma schema for crewdeck
+// Run `pnpm prisma generate` after setting up your database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Agency {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  niche       String   // DeFi, NFT, Web3, etc.
+  description String?
+  website     String?
+  email       String?
+  location    String?
+  founded     Int?
+  teamSize    String?
+  
+  // Verification
+  verified    Boolean  @default(false)
+  
+  // Rating & Reviews
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  
+  // Pricing
+  priceRangeMin Int?
+  priceRangeMax Int?
+  
+  // Relations
+  services    Service[]
+  portfolio   Portfolio[]
+  reviews     Review[]
+  messages    Message[]
+  
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([niche])
+  @@index([verified])
+}
+
+model Service {
+  id        String   @id @default(cuid())
+  name      String
+  agencyId  String
+  agency    Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([agencyId])
+}
+
+model Portfolio {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  image       String?
+  metrics     String?
+  agencyId    String
+  agency      Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([agencyId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5
+  comment   String?
+  author    String?
+  agencyId  String
+  agency    Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([agencyId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  agencyId  String
+  agency    Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  senderId  String?  // User ID
+  
+  createdAt DateTime @default(now())
+  
+  @@index([agencyId])
+}
