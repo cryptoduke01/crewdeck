@@ -66,10 +66,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       let baseSlug = agencyName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
       
       // Create user with agency name in metadata (for trigger to use)
-      const { data, error: authError } = await supabase.auth.signUp({
+      // Enable email confirmation - Supabase will send verification email
+      const redirectUrl = typeof window !== "undefined" 
+        ? `${window.location.origin}/auth/callback`
+        : process.env.NEXT_PUBLIC_APP_URL 
+          ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
+          : "/auth/callback";
+
+      const { data, error: authError } = await supabase.auth.signUp({ 
         email,
         password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
             agency_name: agencyName,
             agency_slug: baseSlug,

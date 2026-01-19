@@ -4,17 +4,19 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Mail, Lock, Building2, ArrowRight, Loader2 } from "lucide-react";
+import { Mail, Building2, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
 import { useAuth } from "@/lib/auth/context";
 import { useToast } from "@/lib/toast/context";
+import { PasswordInput } from "@/components/password-input";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [agencyName, setAgencyName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
   const { signUp } = useAuth();
   const { success: showSuccess, error: showError } = useToast();
   const router = useRouter();
@@ -29,16 +31,27 @@ export default function SignupPage() {
       return;
     }
 
+    if (passwordStrength < 2) {
+      showError("Weak password", "Please use a stronger password with at least 8 characters, including uppercase, lowercase, and numbers");
+      setLoading(false);
+      return;
+    }
+
     const { error } = await signUp(email, password, agencyName);
 
     if (error) {
       showError("Signup failed", error.message);
       setLoading(false);
     } else {
-      showSuccess("Account created!", "Redirecting to dashboard...", 2000);
+      showSuccess(
+        "Welcome to crewdeck!", 
+        `Thanks for joining, ${agencyName}! We've sent a welcome email with next steps.`,
+        4000
+      );
+      // Redirect to login after showing message
       setTimeout(() => {
-        router.push("/dashboard/agency");
-      }, 2000);
+        router.push("/auth/login");
+      }, 3000);
     }
   };
 
@@ -99,19 +112,15 @@ export default function SignupPage() {
                 <label htmlFor="password" className="text-sm font-medium text-foreground/80">
                   Password
                 </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-foreground/40" />
-                  <input
-                    id="password"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full h-11 pl-10 pr-4 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
-                    placeholder="••••••••"
-                  />
-                </div>
-                <p className="text-xs text-foreground/50">Must be at least 6 characters</p>
+                <PasswordInput
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  onStrengthChange={setPasswordStrength}
+                />
+                <p className="text-xs text-foreground/50">Must be at least 6 characters, 8+ recommended</p>
               </div>
 
               <Button

@@ -209,7 +209,7 @@ export default function AgencyProfilePage() {
           )}
 
           {/* Portfolio Section */}
-          {agency.portfolio.length > 0 && (
+          {agency.portfolio && agency.portfolio.length > 0 && (
             <motion.section
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -229,6 +229,15 @@ export default function AgencyProfilePage() {
                     whileHover={{ y: -4 }}
                     className="group relative p-5 rounded-lg border border-border bg-card hover:border-foreground/20 transition-all"
                   >
+                    {project.image && (
+                      <div className="mb-3 rounded-lg overflow-hidden border border-border">
+                        <img
+                          src={project.image}
+                          alt={project.title}
+                          className="w-full h-48 object-cover"
+                        />
+                      </div>
+                    )}
                     <h3 className="text-lg font-medium mb-2">{project.title}</h3>
                     {project.description && (
                       <p className="text-sm text-foreground/60 mb-3 leading-relaxed">{project.description}</p>
@@ -237,15 +246,6 @@ export default function AgencyProfilePage() {
                       <div className="flex items-center gap-2 text-xs font-medium text-foreground/50">
                         <TrendingUp className="h-3.5 w-3.5" />
                         {project.metrics}
-                      </div>
-                    )}
-                    {project.image && (
-                      <div className="mt-3 rounded-lg overflow-hidden border border-border">
-                        <img
-                          src={project.image}
-                          alt={project.title}
-                          className="w-full h-48 object-cover"
-                        />
                       </div>
                     )}
                   </motion.div>
