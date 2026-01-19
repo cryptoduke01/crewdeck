@@ -109,34 +109,13 @@ class SearchClient {
     locations: string[];
     services: string[];
   }> {
-    if (!this.client) {
-      return {
-        niches: [],
-        locations: [],
-        services: [],
-      };
-    }
-
-    try {
-      const index = this.client.index(this.indexName);
-
-      // Get distinct values for facets
-      // Note: This requires facets to be configured in MeiliSearch
-      const facets = await index.getFaceting();
-
-      return {
-        niches: facets?.niche || [],
-        locations: facets?.location || [],
-        services: facets?.services || [],
-      };
-    } catch (error) {
-      console.error("Error fetching filters:", error);
-      return {
-        niches: [],
-        locations: [],
-        services: [],
-      };
-    }
+    // MeiliSearch is optional - return empty arrays if not configured
+    // Filters are handled client-side via Supabase queries
+    return {
+      niches: [],
+      locations: [],
+      services: [],
+    };
   }
 }
 

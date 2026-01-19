@@ -231,8 +231,13 @@ export default function EditProfilePage() {
           if (insertError) throw insertError;
         }
 
-        // Update portfolio items
-        await savePortfolioItems(agency.id);
+        // Update portfolio items (don't fail the whole update if portfolio save fails)
+        try {
+          await savePortfolioItems(agency.id);
+        } catch (portfolioErr) {
+          console.error("Error saving portfolio:", portfolioErr);
+          // Don't throw - portfolio can be saved separately
+        }
 
         analytics.track("Agency Profile Updated", {
           agencyId: agency.id,
