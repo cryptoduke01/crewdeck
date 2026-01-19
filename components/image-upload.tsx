@@ -2,7 +2,8 @@
 
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
+import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { LoadingSpinner } from "@/components/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/lib/toast/context";
@@ -117,7 +118,7 @@ export function ImageUpload({ agencyId, onUploadComplete, currentImageUrl, folde
           </div>
           {uploading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-lg">
-              <Loader2 className="h-6 w-6 animate-spin text-foreground/60" />
+              <LoadingSpinner size="lg" />
             </div>
           )}
         </div>
@@ -128,7 +129,7 @@ export function ImageUpload({ agencyId, onUploadComplete, currentImageUrl, folde
         >
           {uploading ? (
             <>
-              <Loader2 className="h-8 w-8 animate-spin text-foreground/60" />
+              <LoadingSpinner size="lg" />
               <p className="text-sm text-foreground/60">Uploading...</p>
             </>
           ) : (

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Star, Loader2 } from "lucide-react";
+import { Star } from "lucide-react";
+import { LoadingSpinner } from "@/components/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/lib/toast/context";
@@ -74,6 +75,34 @@ export function ReviewForm({ agencyId, agencyName, onSuccess }: ReviewFormProps)
           .eq("id", agencyId);
 
         if (updateError) throw updateError;
+      }
+
+      // Fetch agency email to send notification
+      const { data: agencyData } = await supabase
+        .from("agencies")
+        .select("email")
+        .eq("id", agencyId)
+        .single();
+
+      // Send email notification to agency (non-blocking)
+      if (agencyData?.email) {
+        const reviewUrl = `${window.location.origin}/agencies/${agencyId}`;
+        const reviewPreview = comment.trim().substring(0, 200);
+        
+        // Import and use email utility
+        import("@/lib/email/utils").then(({ sendNewReviewNotification }) => {
+          sendNewReviewNotification(
+            agencyData.email,
+            agencyName,
+            author.trim() || "Anonymous",
+            rating,
+            reviewPreview,
+            reviewUrl
+          ).catch((err) => {
+            console.error("Failed to send email notification:", err);
+            // Don't block the form submission if email fails
+          });
+        });
       }
 
       analytics.track("Review Submitted", {
@@ -172,7 +201,7 @@ export function ReviewForm({ agencyId, agencyName, onSuccess }: ReviewFormProps)
       >
         {submitting ? (
           <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            <LoadingSpinner size="sm" />
             Submitting...
           </>
         ) : (

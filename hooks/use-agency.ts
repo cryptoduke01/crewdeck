@@ -93,26 +93,47 @@ export function useAgency(id: string) {
             .order("created_at", { ascending: false });
           
           const portfolio: PortfolioItem[] = (portfolioData || []).map((p: any) => {
-            // Ensure image URL is properly formatted
             let imageUrl = p.image || '';
             
-            // If image URL exists but doesn't start with http, it might be a storage path
-            if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
-              // Try to get public URL from storage
-              try {
-                if (imageUrl.includes('portfolio-images/') || imageUrl.includes('/')) {
-                  // Extract the path after the bucket name
-                  const pathParts = imageUrl.split('portfolio-images/');
-                  const storagePath = pathParts.length > 1 ? pathParts[1] : imageUrl;
+            // Handle different image URL formats
+            if (imageUrl) {
+              // If it's already a full URL, use it
+              if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+                // Already a full URL, use as is
+              } 
+              // If it's a storage path (contains agency ID or portfolio-images)
+              else if (imageUrl.includes('/') || imageUrl.includes('portfolio-images')) {
+                try {
+                  // Extract the path - could be "agencyId/filename" or "portfolio-images/path"
+                  let storagePath = imageUrl;
+                  
+                  // Remove bucket prefix if present
+                  if (storagePath.includes('portfolio-images/')) {
+                    storagePath = storagePath.split('portfolio-images/')[1];
+                  }
+                  
+                  // Get public URL from Supabase Storage
                   const { data: { publicUrl } } = supabase.storage
                     .from("portfolio-images")
                     .getPublicUrl(storagePath);
+                  
                   imageUrl = publicUrl;
+                } catch (err) {
+                  console.warn("Could not generate public URL for image:", imageUrl, err);
+                  imageUrl = '';
                 }
-              } catch (err) {
-                console.warn("Could not generate public URL for image:", imageUrl);
-                // Keep original URL or set to empty
-                imageUrl = '';
+              }
+              // If it's just a filename, assume it's in the agency's folder
+              else {
+                try {
+                  const { data: { publicUrl } } = supabase.storage
+                    .from("portfolio-images")
+                    .getPublicUrl(`${agencyData.id}/${imageUrl}`);
+                  imageUrl = publicUrl;
+                } catch (err) {
+                  console.warn("Could not generate public URL for image:", imageUrl, err);
+                  imageUrl = '';
+                }
               }
             }
             

@@ -14,8 +14,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
 import Link from "next/link";
+import { useAgencies } from "@/hooks/use-agencies";
 
 export default function Home() {
+  // Fetch featured agencies
+  const { agencies: featuredAgencies } = useAgencies({ sortBy: "rating" });
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

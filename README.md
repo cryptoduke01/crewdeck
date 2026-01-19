@@ -23,6 +23,8 @@ pnpm install
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 NEXT_PUBLIC_MIXPANEL_TOKEN=your_mixpanel_token (optional)
+RESEND_API_KEY=your_resend_api_key (for email notifications)
+NEXT_PUBLIC_ADMIN_PASSCODE=your_6_digit_passcode (for admin panel)
 ```
 
 3. Run the development server:

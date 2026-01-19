@@ -13,6 +13,8 @@ import { Loading } from "@/components/loading";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { parseMessage, type ParsedMessage } from "@/lib/message-parser";
 import { useToast } from "@/lib/toast/context";
+import { exportToCSV } from "@/lib/export";
+import { Download } from "lucide-react";
 
 interface Message {
   id: string;

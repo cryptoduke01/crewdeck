@@ -4,7 +4,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Mail, ArrowRight, Loader2 } from "lucide-react";
+import { Mail, ArrowRight } from "lucide-react";
+import { LoadingSpinner } from "@/components/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
 import { useAuth } from "@/lib/auth/context";
@@ -93,7 +94,7 @@ export default function LoginPage() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <LoadingSpinner size="sm" />
                     Signing in...
                   </>
                 ) : (

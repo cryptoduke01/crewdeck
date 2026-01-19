@@ -168,6 +168,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
+      // Send welcome email (non-blocking)
+      if (data.user && email) {
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "https://crewdeck.com");
+        const dashboardUrl = `${baseUrl}/dashboard/agency`;
+        
+        // Use dynamic import to make this non-blocking
+        import("@/lib/email/utils").then(({ sendWelcomeEmail }) => {
+          sendWelcomeEmail(email, agencyName, dashboardUrl).catch((err) => {
+            console.error("Failed to send welcome email:", err);
+            // Don't block signup if email fails
+          });
+        });
+      }
+
       return { error: null };
     } catch (err) {
       return { error: err as Error };

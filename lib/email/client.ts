@@ -1,0 +1,41 @@
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+export interface SendEmailOptions {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  from?: string;
+}
+
+export async function sendEmail({ to, subject, html, text, from = "crewdeck <noreply@crewdeck.com>" }: SendEmailOptions) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY not set, email not sent");
+    return { success: false, error: "Email service not configured" };
+  }
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from,
+      to,
+      subject,
+      html,
+      text,
+    });
+
+    if (error) {
+      console.error("Error sending email:", error);
+      return { success: false, error };
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    console.error("Error sending email:", err);
+    return { 
+      success: false, 
+      error: err instanceof Error ? err.message : "Unknown error" 
+    };
+  }
+}

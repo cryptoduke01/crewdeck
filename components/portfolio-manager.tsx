@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X, Loader2, Image as ImageIcon } from "lucide-react";
+import { Plus, X, Image as ImageIcon } from "lucide-react";
+import { LoadingSpinner } from "@/components/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { ImageUpload } from "@/components/image-upload";
 import { createSupabaseClient } from "@/lib/supabase/client";
@@ -169,12 +170,12 @@ export function PortfolioManager({ agencyId, initialItems = [], onSave }: Portfo
         >
           {saving ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <LoadingSpinner size="sm" />
               Saving portfolio...
             </>
           ) : (
             <>
-              <Loader2 className="h-4 w-4" />
+              <Plus className="h-4 w-4" />
               Save portfolio
             </>
           )}

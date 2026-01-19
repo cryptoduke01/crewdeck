@@ -14,11 +14,18 @@ import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
 import { useAgencies, type SortOption } from "@/hooks/use-agencies";
 import { Loading, LoadingSpinner } from "@/components/loading";
+import { AgencyGridSkeleton } from "@/components/skeleton";
+import { Pagination } from "@/components/pagination";
+import { usePagination } from "@/hooks/use-pagination";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { FavoriteButton } from "@/components/favorite-button";
 import { analytics } from "@/lib/analytics/client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { FilterModal } from "@/components/filter-modal";
-import { SlidersHorizontal } from "lucide-react";
+import { SearchAutocomplete } from "@/components/search-autocomplete";
+import { SlidersHorizontal, Sparkles } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase/client";
+import { highlightText } from "@/lib/search/highlight";
 
 const niches = ["All", "DeFi", "NFT", "Web3", "Gaming", "Metaverse"];
 const locations = ["All", "Remote", "New York, US", "San Francisco, US", "Los Angeles, US", "Austin, US", "Seattle, US"];
@@ -142,11 +149,41 @@ export default function AgenciesPage() {
     analytics.track("Filters Cleared");
   };
 
+  // Pagination
+  const { paginatedItems, currentPage, totalPages, goToPage } = usePagination(agencies, 12);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: "k",
+      ctrl: true,
+      action: () => {
+        const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+        searchInput?.focus();
+      },
+      description: "Focus search",
+    },
+    {
+      key: "/",
+      action: () => {
+        const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+        if (document.activeElement !== searchInput) {
+          searchInput?.focus();
+        }
+      },
+      description: "Focus search",
+    },
+  ]);
+
   if (loading && agencies.length === 0) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <Loading />
+        <div className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <AgencyGridSkeleton count={6} />
+          </div>
+        </div>
       </div>
     );
   }
@@ -176,16 +213,18 @@ export default function AgenciesPage() {
           <div className="mb-10 space-y-4">
             {/* Search Bar and Filter Button */}
             <div className="flex gap-3 items-center">
-              <div className="relative flex-1 max-w-2xl">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-foreground/40" />
-                <input
-                  type="text"
-                  placeholder="Search agencies, services, or niches..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-11 pl-11 pr-4 rounded-lg border border-border bg-card text-sm placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
-                />
-              </div>
+              <SearchAutocomplete
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onSelect={(value) => {
+                  setSearchQuery(value);
+                  analytics.track("Search Performed", {
+                    query: value,
+                    source: "autocomplete",
+                  });
+                }}
+                placeholder="Search agencies, services, or niches..."
+              />
               <Button
                 variant="outline"
                 onClick={() => setIsFilterOpen(true)}
@@ -282,6 +321,7 @@ export default function AgenciesPage() {
           <div className="mb-6 flex items-center justify-between">
             <div className="text-sm text-foreground/60">
               {agencies.length} {agencies.length === 1 ? "agency" : "agencies"} found
+              {totalPages > 1 && ` • Page ${currentPage} of ${totalPages}`}
             </div>
             {loading && agencies.length > 0 && (
               <LoadingSpinner className="w-4 h-4" />
@@ -289,9 +329,10 @@ export default function AgenciesPage() {
           </div>
 
           {/* Agency Grid */}
-          {agencies.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {agencies.map((agency, index) => (
+          {paginatedItems.length > 0 ? (
+            <>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {paginatedItems.map((agency, index) => (
                 <motion.div
                   key={agency.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -301,15 +342,30 @@ export default function AgenciesPage() {
                   className="group"
                 >
                   <div className="relative p-6 rounded-lg border border-border bg-card hover:border-foreground/30 hover:shadow-lg transition-all h-full flex flex-col">
+                    {/* Featured Badge */}
+                    {(agency as any).featured && (
+                      <div className="absolute top-4 right-4">
+                        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-foreground/10 border border-foreground/20">
+                          <Sparkles className="h-3 w-3 text-foreground/60" />
+                          <span className="text-xs font-medium text-foreground/60">Featured</span>
+                        </div>
+                      </div>
+                    )}
                     {/* Header */}
                     <div className="mb-4">
                       <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-medium">{agency.name}</h3>
+                        <div className="flex items-center gap-2 flex-1">
+                          <h3 
+                            className="text-lg font-medium"
+                            dangerouslySetInnerHTML={{
+                              __html: highlightText(agency.name, searchQuery),
+                            }}
+                          />
                           {agency.verified && (
                             <CheckCircle2 className="h-4 w-4 text-foreground/40 flex-shrink-0" />
                           )}
                         </div>
+                        <FavoriteButton agencyId={agency.id} />
                       </div>
                       <div className="flex items-center gap-3 text-sm">
                         <div className="flex items-center gap-1">
@@ -324,15 +380,22 @@ export default function AgenciesPage() {
 
                     {/* Niche Badge */}
                     <div className="mb-4">
-                      <span className="inline-block px-2.5 py-1 rounded-md text-xs font-medium bg-muted text-foreground/70 border border-border">
-                        {agency.niche}
-                      </span>
+                      <span 
+                        className="inline-block px-2.5 py-1 rounded-md text-xs font-medium bg-muted text-foreground/70 border border-border"
+                        dangerouslySetInnerHTML={{
+                          __html: highlightText(agency.niche, searchQuery),
+                        }}
+                      />
                     </div>
 
                     {/* Location */}
                     <div className="flex items-center gap-2 text-sm text-foreground/60 mb-4">
                       <MapPin className="h-4 w-4 flex-shrink-0" />
-                      <span>{agency.location}</span>
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html: highlightText(agency.location, searchQuery),
+                        }}
+                      />
                     </div>
 
                     {/* Services */}
@@ -343,9 +406,10 @@ export default function AgenciesPage() {
                           <span
                             key={service}
                             className="px-2 py-1 rounded text-xs bg-muted text-foreground/60 border border-border"
-                          >
-                            {service}
-                          </span>
+                            dangerouslySetInnerHTML={{
+                              __html: highlightText(service, searchQuery),
+                            }}
+                          />
                         ))}
                       </div>
                     </div>
@@ -377,8 +441,16 @@ export default function AgenciesPage() {
                     </Link>
                   </div>
                 </motion.div>
-              ))}
-            </div>
+                ))}
+              </div>
+              {totalPages > 1 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={goToPage}
+                />
+              )}
+            </>
           ) : (
             <motion.div
               initial={{ opacity: 0 }}

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Send, Loader2 } from "lucide-react";
+import { Mail, Send } from "lucide-react";
+import { LoadingSpinner } from "@/components/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { analytics } from "@/lib/analytics/client";
@@ -67,6 +68,33 @@ export function ContactForm({ agencyId, agencyName, onSuccess }: ContactFormProp
         });
 
       if (insertError) throw insertError;
+
+      // Fetch agency email to send notification
+      const { data: agencyData } = await supabase
+        .from("agencies")
+        .select("email")
+        .eq("id", agencyId)
+        .single();
+
+      // Send email notification to agency (non-blocking)
+      if (agencyData?.email) {
+        const messageUrl = `${window.location.origin}/dashboard/agency/messages`;
+        const messagePreview = formData.message.substring(0, 200);
+        
+        // Import and use email utility
+        import("@/lib/email/utils").then(({ sendNewMessageNotification }) => {
+          sendNewMessageNotification(
+            agencyData.email,
+            agencyName,
+            formData.name,
+            messagePreview,
+            messageUrl
+          ).catch((err) => {
+            console.error("Failed to send email notification:", err);
+            // Don't block the form submission if email fails
+          });
+        });
+      }
 
       setSuccess(true);
       setFormData({ name: "", email: "", message: "", projectType: "", xHandle: "" });
@@ -212,7 +240,7 @@ export function ContactForm({ agencyId, agencyName, onSuccess }: ContactFormProp
       >
         {loading ? (
           <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            <LoadingSpinner size="sm" />
             Sending...
           </>
         ) : (

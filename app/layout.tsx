@@ -1,16 +1,11 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import { AuthProvider } from "@/lib/auth/context";
 import { ToastProvider } from "@/lib/toast/context";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
+import { SiteLoader } from "@/components/site-loader";
 
 export const metadata: Metadata = {
   title: "crewdeck - Marketing Agency Aggregator",
@@ -24,7 +19,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
+      <body className={`${GeistSans.variable} font-sans antialiased`} suppressHydrationWarning>
+        <SiteLoader />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

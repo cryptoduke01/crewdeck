@@ -3,7 +3,8 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
+import { LoadingSpinner } from "@/components/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
 import { createSupabaseClient } from "@/lib/supabase/client";
@@ -75,7 +76,7 @@ function CallbackContent() {
         >
           {status === "loading" && (
             <>
-              <Loader2 className="h-12 w-12 text-foreground/40 mx-auto mb-4 animate-spin" />
+              <LoadingSpinner size="lg" className="mx-auto mb-4" />
               <h1 className="text-2xl font-semibold mb-2">Verifying email</h1>
               <p className="text-sm text-foreground/60">{message}</p>
             </>
@@ -120,7 +121,7 @@ export default function AuthCallbackPage() {
           <div className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-md">
               <div className="p-8 rounded-lg border border-border bg-card text-center">
-                <Loader2 className="h-12 w-12 text-foreground/40 mx-auto mb-4 animate-spin" />
+                <LoadingSpinner size="lg" className="mx-auto mb-4" />
                 <h1 className="text-2xl font-semibold mb-2">Loading...</h1>
               </div>
             </div>

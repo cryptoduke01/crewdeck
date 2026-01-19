@@ -22,6 +22,8 @@ import { Navbar } from "@/components/navbar";
 import { Loading } from "@/components/loading";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/lib/toast/context";
+import { exportToCSV } from "@/lib/export";
+import { Download, Sparkles } from "lucide-react";
 
 // Disable static generation for this page
 export const dynamic = 'force-dynamic';
@@ -31,6 +33,7 @@ interface Agency {
   name: string;
   slug: string;
   verified: boolean;
+  featured?: boolean;
   rating: number;
   reviews: number;
   created_at: string;
@@ -158,6 +161,27 @@ export default function AdminPage() {
     }
   };
 
+  const handleFeaturedToggle = async (agencyId: string, currentStatus: boolean) => {
+    try {
+      const supabase = createSupabaseClient();
+      const { error } = await supabase
+        .from("agencies")
+        .update({ featured: !currentStatus })
+        .eq("id", agencyId);
+
+      if (error) throw error;
+
+      showSuccess("Featured status updated", `Agency ${currentStatus ? "unfeatured" : "featured"} successfully.`);
+      setAgencies((prev) =>
+        prev.map((agency) =>
+          agency.id === agencyId ? { ...agency, featured: !currentStatus } : agency
+        )
+      );
+    } catch (err) {
+      showError("Failed to update featured status", err instanceof Error ? err.message : "Unknown error");
+    }
+  };
+
   const handleDelete = async (agencyId: string, agencyName: string) => {
     if (!confirm(`Are you sure you want to delete "${agencyName}"? This action cannot be undone.`)) {
       return;
@@ -232,17 +256,38 @@ export default function AdminPage() {
                   Manage agencies, verify accounts, and moderate content.
                 </p>
               </div>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  sessionStorage.removeItem("admin_authenticated");
-                  router.push("/");
-                }}
-                className="gap-2 cursor-pointer"
-              >
-                <LogOut className="h-4 w-4" />
-                Exit Admin
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const csvData = agencies.map((agency) => ({
+                      Name: agency.name,
+                      Slug: agency.slug,
+                      Status: agency.verified ? "Verified" : "Pending",
+                      Featured: agency.featured ? "Yes" : "No",
+                      Rating: agency.rating.toFixed(1),
+                      Reviews: agency.reviews,
+                      Created: new Date(agency.created_at).toLocaleDateString(),
+                    }));
+                    exportToCSV(csvData, `agencies-${new Date().toISOString().split("T")[0]}`);
+                  }}
+                  className="gap-2 cursor-pointer"
+                >
+                  <Download className="h-4 w-4" />
+                  Export CSV
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    sessionStorage.removeItem("admin_authenticated");
+                    router.push("/");
+                  }}
+                  className="gap-2 cursor-pointer"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Exit Admin
+                </Button>
+              </div>
             </div>
           </motion.div>
 
@@ -356,6 +401,9 @@ export default function AdminPage() {
                       Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-foreground/60 uppercase tracking-wider">
+                      Featured
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-foreground/60 uppercase tracking-wider">
                       Rating
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-foreground/60 uppercase tracking-wider">
@@ -397,6 +445,16 @@ export default function AdminPage() {
                         )}
                       </td>
                       <td className="px-6 py-4">
+                        {agency.featured ? (
+                          <div className="flex items-center gap-1">
+                            <Sparkles className="h-3.5 w-3.5 text-foreground/60" />
+                            <span className="text-xs text-foreground/60">Yes</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-foreground/40">No</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
                         <div className="flex items-center gap-1">
                           <Star className="h-4 w-4 fill-foreground/20 text-foreground/40" />
                           <span className="text-sm font-medium">{agency.rating.toFixed(1)}</span>
@@ -415,6 +473,15 @@ export default function AdminPage() {
                             className="cursor-pointer"
                           >
                             <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleFeaturedToggle(agency.id, agency.featured || false)}
+                            className={`gap-1 cursor-pointer ${agency.featured ? "text-orange-500 hover:text-orange-600" : "text-foreground/60 hover:text-foreground"}`}
+                          >
+                            <Sparkles className="h-3.5 w-3.5" />
+                            {agency.featured ? "Unfeature" : "Feature"}
                           </Button>
                           <Button
                             variant="ghost"

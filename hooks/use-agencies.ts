@@ -22,49 +22,6 @@ export interface Agency {
 
 export type SortOption = "rating" | "price-low" | "price-high" | "newest" | "reviews";
 
-// Fallback mock data when Supabase is not configured
-const mockAgencies: Agency[] = [
-  {
-    id: "1",
-    name: "Crypto Marketing Pros",
-    niche: "DeFi",
-    rating: 4.9,
-    reviews: 127,
-    location: "Remote",
-    services: ["Social Media", "Community Management", "Content"],
-    priceRange: "$5K - $20K",
-    priceRangeMin: 5000,
-    priceRangeMax: 20000,
-    verified: true,
-  },
-  {
-    id: "2",
-    name: "NFT Launch Studio",
-    niche: "NFT",
-    rating: 4.8,
-    reviews: 89,
-    location: "New York, US",
-    services: ["Launch Strategy", "Influencer Marketing", "PR"],
-    priceRange: "$10K - $50K",
-    priceRangeMin: 10000,
-    priceRangeMax: 50000,
-    verified: true,
-  },
-  {
-    id: "3",
-    name: "Web3 Growth Agency",
-    niche: "Web3",
-    rating: 5.0,
-    reviews: 203,
-    location: "San Francisco, US",
-    services: ["Growth Hacking", "Marketing Strategy", "Analytics"],
-    priceRange: "$15K - $100K",
-    priceRangeMin: 15000,
-    priceRangeMax: 100000,
-    verified: true,
-  },
-];
-
 export function useAgencies(options?: {
   niche?: string;
   searchQuery?: string;
@@ -93,7 +50,8 @@ export function useAgencies(options?: {
           let query = supabase
             .from("agencies")
             .select("*")
-            .eq("verified", true);
+            .eq("verified", true)
+            .order("featured", { ascending: false }); // Featured agencies first
 
           // Apply filters
           if (options?.niche && options.niche !== "All") {
@@ -113,9 +71,14 @@ export function useAgencies(options?: {
           }
 
           if (options?.searchQuery) {
-            query = query.or(
-              `name.ilike.%${options.searchQuery}%,description.ilike.%${options.searchQuery}%`
-            );
+            const searchTerm = options.searchQuery.trim();
+            if (searchTerm) {
+              // Full-text search across multiple fields
+              // Search in name, description, niche, and location
+              query = query.or(
+                `name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,niche.ilike.%${searchTerm}%,location.ilike.%${searchTerm}%`
+              );
+            }
           }
 
           // Apply sorting
@@ -192,73 +155,16 @@ export function useAgencies(options?: {
 
           setAgencies(transformedAgencies);
         } else {
-          // Fallback to mock data with client-side filtering
-          await new Promise((resolve) => setTimeout(resolve, 300));
-
-          let filtered = [...mockAgencies];
-
-          if (options?.niche && options.niche !== "All") {
-            filtered = filtered.filter((a) => a.niche === options.niche);
-          }
-
-          if (options?.location && options.location !== "All") {
-            filtered = filtered.filter((a) => a.location === options.location);
-          }
-
-          if (options?.minPrice !== undefined) {
-            filtered = filtered.filter((a) => (a.priceRangeMin || 0) >= options.minPrice!);
-          }
-
-          if (options?.maxPrice !== undefined) {
-            filtered = filtered.filter((a) => (a.priceRangeMax || Infinity) <= options.maxPrice!);
-          }
-
-          if (options?.searchQuery) {
-            const query = options.searchQuery.toLowerCase();
-            filtered = filtered.filter(
-              (a) =>
-                a.name.toLowerCase().includes(query) ||
-                a.services.some((s) => s.toLowerCase().includes(query))
-            );
-          }
-
-          if (options?.services && options.services.length > 0) {
-            filtered = filtered.filter(agency =>
-              options.services!.some(selectedService =>
-                agency.services.some((service: string) =>
-                  service.toLowerCase().includes(selectedService.toLowerCase())
-                )
-              )
-            );
-          }
-
-          // Client-side sorting
-          if (options?.sortBy) {
-            filtered.sort((a, b) => {
-              switch (options.sortBy) {
-                case "rating":
-                  return b.rating - a.rating;
-                case "price-low":
-                  return (a.priceRangeMin || 0) - (b.priceRangeMin || 0);
-                case "price-high":
-                  return (b.priceRangeMax || Infinity) - (a.priceRangeMax || Infinity);
-                case "reviews":
-                  return b.reviews - a.reviews;
-                default:
-                  return 0;
-              }
-            });
-          }
-
-          setAgencies(filtered);
+          // Supabase not configured - show empty state
+          setAgencies([]);
+          setError("Supabase not configured. Please set up your environment variables.");
         }
 
         setLoading(false);
       } catch (err) {
         console.error("Error fetching agencies:", err);
         setError(err instanceof Error ? err.message : "Failed to fetch agencies");
-        
-        setAgencies(mockAgencies);
+        setAgencies([]);
         setLoading(false);
       }
     }
