@@ -79,25 +79,25 @@ export function ContactForm({ agencyId, agencyName, onSuccess }: ContactFormProp
         // Don't throw - message was saved, just email notification failed
       }
 
-      // Send email notification to agency (non-blocking)
+      // Send email notification to agency (truly non-blocking - fire and forget)
       if (agencyData?.email) {
-        try {
-          const messageUrl = typeof window !== "undefined" 
-            ? `${window.location.origin}/dashboard/agency/messages`
-            : `/dashboard/agency/messages`;
-          const messagePreview = formData.message.substring(0, 200);
-          
-          await sendNewMessageNotification(
-            agencyData.email,
-            agencyName,
-            formData.name,
-            messagePreview,
-            messageUrl
-          );
-        } catch (emailErr) {
-          console.error("Failed to send email notification:", emailErr);
-          // Don't block the form submission if email fails
-        }
+        // Don't await - let it run in background
+        const messageUrl = typeof window !== "undefined" 
+          ? `${window.location.origin}/dashboard/agency/messages`
+          : `/dashboard/agency/messages`;
+        const messagePreview = formData.message.substring(0, 200);
+        
+        // Fire and forget - don't block on email sending
+        sendNewMessageNotification(
+          agencyData.email,
+          agencyName,
+          formData.name,
+          messagePreview,
+          messageUrl
+        ).catch((emailErr) => {
+          // Silently log error - don't show to user since message was saved
+          console.error("Failed to send email notification (non-blocking):", emailErr);
+        });
       }
 
       setSuccess(true);

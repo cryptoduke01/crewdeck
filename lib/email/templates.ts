@@ -4,6 +4,9 @@ export interface EmailTemplate {
   text: string;
 }
 
+// Get website URL from env or default to crewdeck.xyz
+const WEBSITE_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://crewdeck.xyz";
+
 export function newMessageEmail(agencyName: string, senderName: string, messagePreview: string, messageUrl: string): EmailTemplate {
   const subject = `New message from ${senderName} on crewdeck`;
   
@@ -37,7 +40,7 @@ export function newMessageEmail(agencyName: string, senderName: string, messageP
         </div>
         
         <p style="color: #666; font-size: 12px; margin-top: 30px; text-align: center;">
-          This email was sent from <a href="https://crewdeck.com" style="color: #000;">crewdeck</a>
+          This email was sent from <a href="${WEBSITE_URL}" style="color: #000;">crewdeck</a>
         </p>
       </body>
     </html>
@@ -99,7 +102,7 @@ export function newReviewEmail(agencyName: string, reviewerName: string, rating:
         </div>
         
         <p style="color: #666; font-size: 12px; margin-top: 30px; text-align: center;">
-          This email was sent from <a href="https://crewdeck.com" style="color: #000;">crewdeck</a>
+          This email was sent from <a href="${WEBSITE_URL}" style="color: #000;">crewdeck</a>
         </p>
       </body>
     </html>
@@ -166,7 +169,7 @@ export function welcomeEmail(agencyName: string, dashboardUrl: string): EmailTem
         </div>
         
         <p style="color: #666; font-size: 12px; margin-top: 30px; text-align: center;">
-          This email was sent from <a href="https://crewdeck.com" style="color: #000;">crewdeck</a>
+          This email was sent from <a href="${WEBSITE_URL}" style="color: #000;">crewdeck</a>
         </p>
       </body>
     </html>

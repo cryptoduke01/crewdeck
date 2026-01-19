@@ -19,14 +19,37 @@ export async function sendNewMessageNotification(
   });
 
   if (!response.ok) {
-    let errorMessage = "Failed to send email";
+    let errorMessage = `Failed to send email (HTTP ${response.status})`;
     try {
       const errorData = await response.json();
-      errorMessage = typeof errorData === 'string' 
-        ? errorData 
-        : errorData?.error || errorData?.message || JSON.stringify(errorData) || "Failed to send email";
-    } catch {
-      errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      
+      // Handle different error response formats
+      if (typeof errorData === 'string') {
+        errorMessage = errorData;
+      } else if (errorData && typeof errorData === 'object') {
+        // Try to extract error message from common error object formats
+        if (errorData.error) {
+          errorMessage = typeof errorData.error === 'string' 
+            ? errorData.error 
+            : JSON.stringify(errorData.error);
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.details) {
+          errorMessage = typeof errorData.details === 'string'
+            ? errorData.details
+            : JSON.stringify(errorData.details);
+        } else {
+          // Try to stringify the whole object, but handle circular references
+          try {
+            errorMessage = JSON.stringify(errorData, null, 2);
+          } catch {
+            errorMessage = `Email API error: ${response.status} ${response.statusText}`;
+          }
+        }
+      }
+    } catch (parseError) {
+      // If JSON parsing fails, use status text
+      errorMessage = `HTTP ${response.status}: ${response.statusText || 'Unknown error'}`;
     }
     throw new Error(errorMessage);
   }
@@ -54,14 +77,37 @@ export async function sendNewReviewNotification(
   });
 
   if (!response.ok) {
-    let errorMessage = "Failed to send email";
+    let errorMessage = `Failed to send email (HTTP ${response.status})`;
     try {
       const errorData = await response.json();
-      errorMessage = typeof errorData === 'string' 
-        ? errorData 
-        : errorData?.error || errorData?.message || JSON.stringify(errorData) || "Failed to send email";
-    } catch {
-      errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      
+      // Handle different error response formats
+      if (typeof errorData === 'string') {
+        errorMessage = errorData;
+      } else if (errorData && typeof errorData === 'object') {
+        // Try to extract error message from common error object formats
+        if (errorData.error) {
+          errorMessage = typeof errorData.error === 'string' 
+            ? errorData.error 
+            : JSON.stringify(errorData.error);
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.details) {
+          errorMessage = typeof errorData.details === 'string'
+            ? errorData.details
+            : JSON.stringify(errorData.details);
+        } else {
+          // Try to stringify the whole object, but handle circular references
+          try {
+            errorMessage = JSON.stringify(errorData, null, 2);
+          } catch {
+            errorMessage = `Email API error: ${response.status} ${response.statusText}`;
+          }
+        }
+      }
+    } catch (parseError) {
+      // If JSON parsing fails, use status text
+      errorMessage = `HTTP ${response.status}: ${response.statusText || 'Unknown error'}`;
     }
     throw new Error(errorMessage);
   }
@@ -86,14 +132,37 @@ export async function sendWelcomeEmail(
   });
 
   if (!response.ok) {
-    let errorMessage = "Failed to send email";
+    let errorMessage = `Failed to send email (HTTP ${response.status})`;
     try {
       const errorData = await response.json();
-      errorMessage = typeof errorData === 'string' 
-        ? errorData 
-        : errorData?.error || errorData?.message || JSON.stringify(errorData) || "Failed to send email";
-    } catch {
-      errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      
+      // Handle different error response formats
+      if (typeof errorData === 'string') {
+        errorMessage = errorData;
+      } else if (errorData && typeof errorData === 'object') {
+        // Try to extract error message from common error object formats
+        if (errorData.error) {
+          errorMessage = typeof errorData.error === 'string' 
+            ? errorData.error 
+            : JSON.stringify(errorData.error);
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.details) {
+          errorMessage = typeof errorData.details === 'string'
+            ? errorData.details
+            : JSON.stringify(errorData.details);
+        } else {
+          // Try to stringify the whole object, but handle circular references
+          try {
+            errorMessage = JSON.stringify(errorData, null, 2);
+          } catch {
+            errorMessage = `Email API error: ${response.status} ${response.statusText}`;
+          }
+        }
+      }
+    } catch (parseError) {
+      // If JSON parsing fails, use status text
+      errorMessage = `HTTP ${response.status}: ${response.statusText || 'Unknown error'}`;
     }
     throw new Error(errorMessage);
   }

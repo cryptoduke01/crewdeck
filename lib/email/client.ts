@@ -22,7 +22,11 @@ export interface SendEmailOptions {
   from?: string;
 }
 
-export async function sendEmail({ to, subject, html, text, from = "crewdeck <noreply@crewdeck.com>" }: SendEmailOptions) {
+// Get email domain from env or default to crewdeck.xyz
+const EMAIL_DOMAIN = process.env.EMAIL_DOMAIN || "crewdeck.xyz";
+const DEFAULT_FROM = `crewdeck <noreply@${EMAIL_DOMAIN}>`;
+
+export async function sendEmail({ to, subject, html, text, from = DEFAULT_FROM }: SendEmailOptions) {
   const resend = getResend();
   
   if (!resend) {

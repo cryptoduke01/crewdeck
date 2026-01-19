@@ -6,6 +6,7 @@ import { AnalyticsProvider } from "@/components/analytics-provider";
 import { AuthProvider } from "@/lib/auth/context";
 import { ToastProvider } from "@/lib/toast/context";
 import { SiteLoader } from "@/components/site-loader";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: "crewdeck - Marketing Agency Aggregator",
@@ -35,6 +36,7 @@ export default function RootLayout({
             </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );

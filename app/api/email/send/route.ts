@@ -16,8 +16,27 @@ export async function POST(request: NextRequest) {
     const result = await sendEmail({ to, subject, html, text, from });
 
     if (!result.success) {
+      // Extract error message properly - handle both string and object errors
+      let errorMessage = "Failed to send email";
+      if (typeof result.error === 'string') {
+        errorMessage = result.error;
+      } else if (result.error && typeof result.error === 'object') {
+        // Handle Resend error objects
+        if (result.error.message) {
+          errorMessage = result.error.message;
+        } else if (result.error.name) {
+          errorMessage = `${result.error.name}: ${result.error.message || 'Unknown error'}`;
+        } else {
+          try {
+            errorMessage = JSON.stringify(result.error);
+          } catch {
+            errorMessage = "Email service error";
+          }
+        }
+      }
+      
       return NextResponse.json(
-        { error: result.error },
+        { error: errorMessage },
         { status: 500 }
       );
     }
