@@ -1,6 +1,18 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resendInstance: Resend | null = null;
+
+function getResend(): Resend | null {
+  if (!process.env.RESEND_API_KEY) {
+    return null;
+  }
+  
+  if (!resendInstance) {
+    resendInstance = new Resend(process.env.RESEND_API_KEY);
+  }
+  
+  return resendInstance;
+}
 
 export interface SendEmailOptions {
   to: string;
@@ -11,7 +23,9 @@ export interface SendEmailOptions {
 }
 
 export async function sendEmail({ to, subject, html, text, from = "crewdeck <noreply@crewdeck.com>" }: SendEmailOptions) {
-  if (!process.env.RESEND_API_KEY) {
+  const resend = getResend();
+  
+  if (!resend) {
     console.warn("RESEND_API_KEY not set, email not sent");
     return { success: false, error: "Email service not configured" };
   }
