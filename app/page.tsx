@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
+import { Logo } from "@/components/logo";
 import Link from "next/link";
 export default function Home() {
   // Removed unnecessary data fetching - homepage doesn't display agencies
@@ -21,37 +22,66 @@ export default function Home() {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative pt-32 pb-24 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl">
+      <section className="relative pt-32 pb-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Stacked layers background effect */}
+        <div className="absolute inset-0 -z-10 opacity-5">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-foreground rounded-3xl rotate-6 blur-3xl"></div>
+          <div className="absolute top-40 right-20 w-96 h-96 bg-foreground rounded-3xl -rotate-12 blur-3xl"></div>
+          <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-foreground rounded-3xl rotate-45 blur-3xl"></div>
+        </div>
+        
+        <div className="mx-auto max-w-5xl">
           <div className="text-center">
-            <h1
-              className="text-4xl sm:text-5xl lg:text-6xl font-semibold mb-6 leading-tight tracking-tight"
-            >
-              The Marketing <span className="whitespace-nowrap">Agency Aggregator</span>
-              <br />
-              <span className="text-foreground/80">for Web3 Projects</span>
+            {/* Logo showcase */}
+            <div className="mb-12 flex justify-center">
+              <div className="relative">
+                <Logo variant="standalone" size={120} className="h-20 w-20 opacity-90" />
+                <div className="absolute inset-0 bg-gradient-to-br from-foreground/20 to-transparent rounded-full blur-2xl -z-10"></div>
+              </div>
+            </div>
+
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-8 leading-tight tracking-tight">
+              <span className="block mb-2">The Marketing</span>
+              <span className="block bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
+                Agency Aggregator
+              </span>
+              <span className="block text-3xl sm:text-4xl lg:text-5xl font-medium text-foreground/70 mt-4">
+                for Web3 Projects
+              </span>
             </h1>
 
-            <p
-              className="text-base sm:text-lg text-foreground/60 max-w-2xl mx-auto mb-10 px-2"
-            >
-              Browse vetted marketing agencies all in one place. Compare services, portfolios, pricing, and reviews to find the right agency for your project.
+            <p className="text-lg sm:text-xl text-foreground/70 max-w-3xl mx-auto mb-12 px-2 leading-relaxed">
+              Browse vetted marketing agencies all in one place. Compare services, portfolios, pricing, and reviews to find the perfect match for your project.
             </p>
 
-            <div
-              className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20"
-            >
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-16">
               <Link href="/agencies" className="cursor-pointer w-full sm:w-auto">
-                <Button size="lg" className="group cursor-pointer w-full sm:w-auto">
+                <Button size="default" className="group cursor-pointer w-full sm:w-auto px-6 shadow-md hover:shadow-lg transition-all">
                   Browse Agencies
                   <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               <Link href="/auth/signup" className="cursor-pointer w-full sm:w-auto">
-                <Button size="lg" variant="outline" className="cursor-pointer w-full sm:w-auto">
+                <Button size="default" variant="outline" className="cursor-pointer w-full sm:w-auto px-6 border-2 hover:bg-foreground/5 transition-all">
                   Join as Agency
                 </Button>
               </Link>
+            </div>
+
+            {/* Stats or social proof */}
+            <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto pt-8 border-t border-border/50">
+              <div className="text-center">
+                <div className="text-2xl sm:text-3xl font-bold text-foreground">100+</div>
+                <div className="text-xs sm:text-sm text-foreground/60 mt-1">Agencies</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl sm:text-3xl font-bold text-foreground">Verified</div>
+                <div className="text-xs sm:text-sm text-foreground/60 mt-1">Quality</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl sm:text-3xl font-bold text-foreground">Web3</div>
+                <div className="text-xs sm:text-sm text-foreground/60 mt-1">Focused</div>
+              </div>
             </div>
           </div>
         </div>
@@ -106,19 +136,23 @@ export default function Home() {
             ].map((feature, index) => (
               <div
                 key={feature.title}
-                className="p-6 rounded-lg border border-border bg-card hover:border-foreground/30 transition-all cursor-default group"
+                className="relative group p-8 rounded-xl border border-border bg-card hover:border-foreground/40 hover:shadow-lg transition-all cursor-default overflow-hidden"
               >
-                <div className="flex items-center gap-4 mb-4">
-                  <div 
-                    className="p-2 rounded-md bg-muted group-hover:bg-foreground/10 transition-colors"
-                  >
-                    <feature.icon className="h-5 w-5 group-hover:text-foreground transition-colors" />
+                {/* Stacked layers effect */}
+                <div className="absolute top-0 right-0 w-24 h-24 bg-foreground/5 rounded-full blur-2xl group-hover:bg-foreground/10 transition-colors"></div>
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-foreground/3 rounded-full blur-2xl group-hover:bg-foreground/8 transition-colors"></div>
+                
+                <div className="relative">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="p-3 rounded-lg bg-foreground/10 group-hover:bg-foreground/20 transition-colors shrink-0">
+                      <feature.icon className="h-6 w-6 group-hover:scale-110 transition-transform" />
+                    </div>
+                    <h3 className="text-lg font-semibold pt-1">{feature.title}</h3>
                   </div>
-                  <h3 className="text-lg font-medium">{feature.title}</h3>
+                  <p className="text-sm text-foreground/70 leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
-                <p className="text-sm text-foreground/60 leading-relaxed">
-                  {feature.description}
-                </p>
               </div>
             ))}
           </div>
@@ -164,17 +198,19 @@ export default function Home() {
                 key={step.step}
                 className="relative group"
               >
-                <div className="p-6 rounded-lg border border-border bg-card hover:border-foreground/30 transition-all">
-                  <div className="text-xs font-medium text-foreground/40 mb-4">
+                {/* Stacked card effect */}
+                <div className="absolute inset-0 bg-foreground/5 rounded-xl blur-xl group-hover:bg-foreground/10 transition-all -z-10" style={{ transform: `translate(${index * 4}px, ${index * 4}px)` }}></div>
+                <div className="absolute inset-0 bg-foreground/10 rounded-xl blur-lg group-hover:bg-foreground/15 transition-all -z-10" style={{ transform: `translate(${index * 2}px, ${index * 2}px)` }}></div>
+                
+                <div className="relative p-8 rounded-xl border-2 border-border bg-card hover:border-foreground/40 hover:shadow-xl transition-all">
+                  <div className="text-xs font-bold text-foreground/40 mb-6 tracking-wider">
                     {step.step}
                   </div>
-                  <div 
-                    className="mb-4"
-                  >
-                    <step.icon className="h-6 w-6 text-foreground/60 group-hover:text-foreground transition-colors" />
+                  <div className="mb-6 p-3 rounded-lg bg-foreground/10 w-fit group-hover:bg-foreground/20 transition-colors">
+                    <step.icon className="h-8 w-8 text-foreground group-hover:scale-110 transition-transform" />
                   </div>
-                  <h3 className="text-lg font-medium mb-3">{step.title}</h3>
-                  <p className="text-sm text-foreground/60 leading-relaxed">
+                  <h3 className="text-xl font-semibold mb-4">{step.title}</h3>
+                  <p className="text-sm text-foreground/70 leading-relaxed">
                     {step.description}
                   </p>
                 </div>
@@ -185,109 +221,94 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 border-t border-border">
-        <div
-          className="mx-auto max-w-3xl text-center"
-        >
-          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">
+      <section className="py-32 px-4 sm:px-6 lg:px-8 border-t border-border relative overflow-hidden">
+        {/* Stacked layers background */}
+        <div className="absolute inset-0 -z-10 opacity-5">
+          <div className="absolute top-10 left-1/4 w-96 h-96 bg-foreground rounded-full blur-3xl"></div>
+          <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-foreground rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="mx-auto max-w-3xl text-center relative">
+          <div className="mb-8">
+            <Logo variant="standalone" size={80} className="h-16 w-16 mx-auto opacity-90" />
+          </div>
+          <h2 className="text-4xl sm:text-5xl font-bold mb-6">
             Ready to find your marketing agency?
           </h2>
-          <p className="text-base text-foreground/60 mb-10 max-w-xl mx-auto">
+          <p className="text-lg text-foreground/70 mb-12 max-w-xl mx-auto leading-relaxed">
             Browse our directory of vetted marketing agencies and find the perfect match for your project.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/agencies" className="cursor-pointer">
-              <Button size="lg" className="group cursor-pointer">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link href="/agencies" className="cursor-pointer w-full sm:w-auto">
+              <Button size="default" className="group cursor-pointer w-full sm:w-auto px-6 shadow-md hover:shadow-lg transition-all">
                 Browse Agencies
                 <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="cursor-pointer">
-              Join as Agency
-            </Button>
+            <Link href="/auth/signup" className="cursor-pointer w-full sm:w-auto">
+              <Button size="default" variant="outline" className="cursor-pointer w-full sm:w-auto px-6 border-2 hover:bg-foreground/5 transition-all">
+                Join as Agency
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-16 px-4 sm:px-6 lg:px-8 bg-muted/30">
+      <footer className="border-t border-border py-20 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid md:grid-cols-4 gap-12 mb-12">
-            <div>
-              <div className="text-lg font-medium mb-4">crewdeck.</div>
-              <p className="text-sm text-foreground/60 leading-relaxed mb-3">
+            <div className="space-y-4">
+              <Logo variant="with-text" size={120} className="h-7" />
+              <p className="text-sm text-foreground/60 leading-relaxed">
                 The marketing agency aggregator for web3 projects.
-              </p>
-              <p className="text-xs text-foreground/50 leading-relaxed">
-                Idea by <a href="https://twitter.com/netrovertHQ" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground/70 cursor-pointer">Netrovert</a>. Built by the crewdeck team.
               </p>
             </div>
             <div>
-              <div className="text-sm font-medium mb-4">Product</div>
-              <ul className="space-y-2 text-sm text-foreground/60">
+              <div className="text-sm font-medium mb-4 text-foreground/90">Product</div>
+              <ul className="space-y-3 text-sm text-foreground/60">
                 <li>
                   <Link href="/agencies" className="hover:text-foreground transition-colors cursor-pointer">
                     Browse Agencies
                   </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-foreground transition-colors cursor-pointer">
-                    For Agencies
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-foreground transition-colors cursor-pointer">
-                    Pricing
-                  </a>
+                  <Link href="/auth/signup" className="hover:text-foreground transition-colors cursor-pointer">
+                    Join as Agency
+                  </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <div className="text-sm font-medium mb-4">Company</div>
-              <ul className="space-y-2 text-sm text-foreground/60">
+              <div className="text-sm font-medium mb-4 text-foreground/90">Company</div>
+              <ul className="space-y-3 text-sm text-foreground/60">
                 <li>
-                  <a href="#" className="hover:text-foreground transition-colors cursor-pointer">
+                  <Link href="/about" className="hover:text-foreground transition-colors cursor-pointer">
                     About
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-foreground transition-colors cursor-pointer">
-                    Blog
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-foreground transition-colors cursor-pointer">
-                    Careers
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <div className="text-sm font-medium mb-4">Legal</div>
-              <ul className="space-y-2 text-sm text-foreground/60">
+              <div className="text-sm font-medium mb-4 text-foreground/90">Legal</div>
+              <ul className="space-y-3 text-sm text-foreground/60">
                 <li>
-                  <a href="#" className="hover:text-foreground transition-colors cursor-pointer">
-                    Privacy
-                  </a>
+                  <Link href="/privacy" className="hover:text-foreground transition-colors cursor-pointer">
+                    Privacy Policy
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-foreground transition-colors cursor-pointer">
-                    Terms
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-foreground transition-colors cursor-pointer">
-                    Contact
-                  </a>
+                  <Link href="/terms" className="hover:text-foreground transition-colors cursor-pointer">
+                    Terms and Conditions
+                  </Link>
                 </li>
               </ul>
             </div>
           </div>
-          <div className="pt-8 border-t border-border text-center text-sm text-foreground/60">
-            <p>© {new Date().getFullYear()} crewdeck. All rights reserved.</p>
-            <p className="mt-2 text-xs">
-              Idea by <a href="https://twitter.com/netrovertHQ" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground/70 cursor-pointer">Netrovert</a>
-            </p>
+          <div className="pt-8 border-t border-border">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-foreground/60">
+              <p>© {new Date().getFullYear()} crewdeck. All rights reserved.</p>
+            </div>
           </div>
         </div>
       </footer>

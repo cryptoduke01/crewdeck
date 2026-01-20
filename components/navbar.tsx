@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/auth/context";
+import { Logo } from "./logo";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -44,7 +45,7 @@ export function Navbar() {
               whileTap={{ scale: 0.98 }}
               className="cursor-pointer"
             >
-              <div className="text-lg font-medium">crewdeck.</div>
+              <Logo variant="with-text" size={120} className="h-7" />
             </motion.div>
           </Link>
 

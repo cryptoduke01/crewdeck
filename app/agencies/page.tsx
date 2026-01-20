@@ -192,19 +192,25 @@ export default function AgenciesPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <div className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+      <div className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Stacked layers background effect */}
+        <div className="absolute inset-0 -z-10 opacity-3">
+          <div className="absolute top-10 left-10 w-96 h-96 bg-foreground rounded-3xl rotate-6 blur-3xl"></div>
+          <div className="absolute top-20 right-20 w-80 h-80 bg-foreground rounded-3xl -rotate-12 blur-3xl"></div>
+        </div>
+        
         <div className="mx-auto max-w-7xl">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="mb-10"
+            className="mb-12"
           >
-            <h1 className="text-3xl sm:text-4xl font-semibold mb-2">
+            <h1 className="text-4xl sm:text-5xl font-bold mb-4">
               Marketing Agencies
             </h1>
-            <p className="text-base text-foreground/60 max-w-2xl">
+            <p className="text-lg text-foreground/70 max-w-2xl">
               Browse vetted marketing agencies. Compare services, portfolios, and reviews.
             </p>
           </motion.div>
@@ -339,9 +345,12 @@ export default function AgenciesPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
                   whileHover={{ y: -6, scale: 1.01 }}
-                  className="group"
+                  className="group relative"
                 >
-                  <div className="relative p-6 rounded-lg border border-border bg-card hover:border-foreground/30 hover:shadow-lg transition-all h-full flex flex-col">
+                  {/* Stacked layers effect */}
+                  <div className="absolute inset-0 bg-foreground/5 rounded-xl blur-xl group-hover:bg-foreground/10 transition-all -z-10" style={{ transform: `translate(${index % 3 * 2}px, ${index % 3 * 2}px)` }}></div>
+                  
+                  <div className="relative p-6 rounded-xl border-2 border-border bg-card hover:border-foreground/40 hover:shadow-xl transition-all h-full flex flex-col">
                     {/* Featured Badge */}
                     {(agency as any).featured && (
                       <div className="absolute top-4 right-4">

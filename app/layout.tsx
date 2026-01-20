@@ -11,6 +11,12 @@ import { Analytics } from "@vercel/analytics/react";
 export const metadata: Metadata = {
   title: "crewdeck - Marketing Agency Aggregator",
   description: "Discover vetted marketing agencies. Compare services, portfolios, and reviews.",
+  icons: {
+    icon: [
+      { url: "/crewdeck/svgs/logo-standalones/crewdeck-black-logo.svg", media: "(prefers-color-scheme: light)" },
+      { url: "/crewdeck/svgs/logo-standalones/crewdeck-white-logo.svg", media: "(prefers-color-scheme: dark)" },
+    ],
+  },
 };
 
 export default function RootLayout({

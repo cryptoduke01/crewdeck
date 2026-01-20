@@ -2,9 +2,17 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
+import Image from "next/image";
 
 export function SiteLoader() {
   const [isVisible, setIsVisible] = useState(true);
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     // Hide loader quickly - minimum 800ms for animation, but hide as soon as page is ready
@@ -33,8 +41,6 @@ export function SiteLoader() {
 
   if (!isVisible) return null;
 
-  const letters = "crewdeck".split("");
-
   return (
     <motion.div
       initial={{ opacity: 1 }}
@@ -44,36 +50,76 @@ export function SiteLoader() {
       className="fixed inset-0 z-[9999] bg-background flex items-center justify-center"
     >
       <div className="text-center">
-        {/* Animated crewdeck text */}
-        <div className="flex items-center justify-center gap-1 mb-8">
-          {letters.map((letter, index) => (
-            <motion.span
-              key={index}
-              initial={{ opacity: 0, y: 20, rotateX: -90 }}
+        {/* Animated logo with stacked layers effect */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+          animate={{ 
+            opacity: 1, 
+            scale: 1,
+            y: 0,
+          }}
+          transition={{
+            duration: 0.6,
+            type: "spring",
+            stiffness: 200,
+            damping: 20,
+          }}
+          className="relative mb-8 flex justify-center"
+        >
+          {/* Stacked layers background effect */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <motion.div
               animate={{ 
-                opacity: 1, 
-                y: 0, 
-                rotateX: 0,
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.5, 0.3],
               }}
               transition={{
-                delay: index * 0.05,
-                duration: 0.4,
-                type: "spring",
-                stiffness: 300,
-                damping: 20,
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
               }}
-              className="text-5xl sm:text-6xl md:text-7xl font-semibold text-foreground inline-block"
-              style={{
-                transformStyle: "preserve-3d",
+              className="w-32 h-32 bg-foreground/20 rounded-full blur-2xl"
+            ></motion.div>
+            <motion.div
+              animate={{ 
+                scale: [1, 1.15, 1],
+                opacity: [0.4, 0.6, 0.4],
               }}
-            >
-              {letter === " " ? "\u00A0" : letter}
-            </motion.span>
-          ))}
-        </div>
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 0.3,
+              }}
+              className="absolute w-28 h-28 bg-foreground/30 rounded-full blur-xl"
+            ></motion.div>
+          </div>
+          
+          <div className="relative z-10">
+            {mounted && (
+              <motion.div
+                initial={{ opacity: 0, rotateY: -90 }}
+                animate={{ opacity: 1, rotateY: 0 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
+              >
+                <Image
+                  src={theme === "dark" 
+                    ? "/crewdeck/svgs/logo-standalones/crewdeck-white-logo.svg"
+                    : "/crewdeck/svgs/logo-standalones/crewdeck-black-logo.svg"
+                  }
+                  alt="crewdeck"
+                  width={120}
+                  height={120}
+                  className="h-24 w-24 sm:h-28 sm:w-28"
+                  priority
+                />
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
 
         {/* Loading dots */}
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-2 mt-8">
           {[0, 1, 2].map((index) => (
             <motion.div
               key={index}
@@ -91,24 +137,6 @@ export function SiteLoader() {
             />
           ))}
         </div>
-
-        {/* Subtle loading bar */}
-        <motion.div
-          className="mt-8 w-48 h-0.5 bg-foreground/10 mx-auto overflow-hidden rounded-full"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <motion.div
-            className="h-full bg-foreground/40"
-            initial={{ width: "0%" }}
-            animate={{ width: "100%" }}
-            transition={{
-              duration: 0.8,
-              ease: "easeInOut",
-            }}
-          />
-        </motion.div>
       </div>
     </motion.div>
   );
