@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-const STORAGE_KEY = "crewdeck_favorites";
+const STORAGE_KEY = "crewdeck_bookmarks";
 
 export function useFavorites() {
   const [favorites, setFavorites] = useState<string[]>([]);

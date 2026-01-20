@@ -156,6 +156,8 @@ export function useMyAgency() {
           priceRangeMin: agencyData.price_range_min,
           priceRangeMax: agencyData.price_range_max,
           verified: agencyData.verified || false,
+          featured: agencyData.featured || false,
+          premium: agencyData.premium || false,
           description: agencyData.description,
           website: agencyData.website,
           email: agencyData.email,

@@ -15,12 +15,14 @@ export interface Agency {
   priceRangeMin?: number;
   priceRangeMax?: number;
   verified: boolean;
+  featured?: boolean;
+  premium?: boolean;
   description?: string;
   website?: string;
   email?: string;
 }
 
-export type SortOption = "rating" | "price-low" | "price-high" | "newest" | "reviews";
+export type SortOption = "rating" | "price-low" | "price-high" | "newest" | "reviews" | "featured";
 
 export function useAgencies(options?: {
   niche?: string;
@@ -99,9 +101,14 @@ export function useAgencies(options?: {
               case "newest":
                 query = query.order("created_at", { ascending: false });
                 break;
+              case "featured":
+                // Featured first, then by rating
+                query = query.order("featured", { ascending: false }).order("rating", { ascending: false });
+                break;
             }
           } else {
-            query = query.order("rating", { ascending: false });
+            // Default: Featured/Premium first, then by rating
+            query = query.order("premium", { ascending: false }).order("featured", { ascending: false }).order("rating", { ascending: false });
           }
 
           const { data, error: queryError } = await query;
@@ -143,6 +150,8 @@ export function useAgencies(options?: {
             priceRangeMin: agency.price_range_min,
             priceRangeMax: agency.price_range_max,
             verified: agency.verified || false,
+            featured: agency.featured || false,
+            premium: agency.premium || false,
             description: agency.description,
             website: agency.website,
             email: agency.email,

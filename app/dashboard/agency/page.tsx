@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { LogOut, Edit, Mail, TrendingUp, Eye } from "lucide-react";
+import { LogOut, Edit, Mail, TrendingUp, Eye, Sparkles, Crown, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
 import { useAuth } from "@/lib/auth/context";
@@ -151,6 +151,47 @@ export default function AgencyDashboardPage() {
               </Button>
             </div>
           </motion.div>
+
+          {/* Plan Status */}
+          {agency && (
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="mb-8 p-6 rounded-xl border-2 border-border bg-card"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Current Plan</h3>
+                  <div className="flex items-center gap-3">
+                    {agency.premium ? (
+                      <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-foreground text-background text-sm font-medium">
+                        <Crown className="h-4 w-4" />
+                        Premium
+                      </span>
+                    ) : agency.featured ? (
+                      <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-500 border border-orange-500/20 text-sm font-medium">
+                        <Sparkles className="h-4 w-4" />
+                        Featured
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted text-foreground/60 text-sm font-medium">
+                        Free
+                      </span>
+                    )}
+                    {!agency.premium && (
+                      <Link href="/pricing">
+                        <Button size="sm" variant="outline" className="gap-2 cursor-pointer">
+                          Upgrade
+                          <ArrowUpRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* Stats Grid */}
           <div className="grid md:grid-cols-3 gap-4 mb-8">

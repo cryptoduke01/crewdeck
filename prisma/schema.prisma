@@ -25,6 +25,11 @@ model Agency {
   // Verification
   verified    Boolean  @default(false)
   
+  // Monetization
+  featured    Boolean  @default(false)
+  premium     Boolean  @default(false)
+  premiumUntil DateTime?
+  
   // Rating & Reviews
   rating      Float    @default(0)
   reviewCount Int      @default(0)

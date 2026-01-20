@@ -1,19 +1,22 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Moon, Sun } from "lucide-react";
+import { Menu, X, Moon, Sun, ChevronDown, Bookmark, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/auth/context";
 import { Logo } from "./logo";
+import { useFavorites } from "@/hooks/use-favorites";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [dashboardDropdownOpen, setDashboardDropdownOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { count: bookmarksCount } = useFavorites();
 
   useEffect(() => {
     setMounted(true);
@@ -72,11 +75,61 @@ export function Navbar() {
             )}
             {!authLoading && (
               user ? (
-                <Link href="/dashboard/agency">
-                  <Button size="sm" variant="default" className="cursor-pointer">
+                <div className="relative">
+                  <Button 
+                    size="sm" 
+                    variant="default" 
+                    className="cursor-pointer gap-2"
+                    onClick={() => setDashboardDropdownOpen(!dashboardDropdownOpen)}
+                  >
                     Dashboard
+                    <ChevronDown className="h-3.5 w-3.5" />
                   </Button>
-                </Link>
+                  {dashboardDropdownOpen && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setDashboardDropdownOpen(false)}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-border bg-card shadow-lg z-50 overflow-hidden"
+                      >
+                        <div className="p-2">
+                          <div className="px-3 py-2 text-xs text-foreground/60 border-b border-border mb-2">
+                            {user.email}
+                          </div>
+                          <Link href="/dashboard/agency" onClick={() => setDashboardDropdownOpen(false)}>
+                            <div className="px-3 py-2 text-sm hover:bg-muted rounded-md cursor-pointer transition-colors">
+                              Dashboard
+                            </div>
+                          </Link>
+                          <div className="px-3 py-2 text-sm text-foreground/70 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Bookmark className="h-4 w-4" />
+                              Bookmarked Agencies
+                            </div>
+                            <span className="text-xs font-medium bg-foreground/10 px-2 py-0.5 rounded-full">
+                              {bookmarksCount}
+                            </span>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              await signOut();
+                              setDashboardDropdownOpen(false);
+                            }}
+                            className="w-full px-3 py-2 text-sm text-foreground/70 hover:bg-muted rounded-md cursor-pointer transition-colors flex items-center gap-2 mt-2"
+                          >
+                            <LogOut className="h-4 w-4" />
+                            Sign out
+                          </button>
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </div>
               ) : (
                 <Link href="/auth/signup">
                   <Button size="sm" variant="default" className="cursor-pointer">
@@ -158,15 +211,39 @@ export function Navbar() {
                     transition={{ delay: 0.15 }}
                   >
                     {user ? (
-                      <Link href="/dashboard/agency" onClick={() => setMobileMenuOpen(false)}>
-                        <Button
-                          variant="default"
-                          size="sm"
-                          className="w-full cursor-pointer"
+                      <div className="space-y-2">
+                        <Link href="/dashboard/agency" onClick={() => setMobileMenuOpen(false)}>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="w-full cursor-pointer"
+                          >
+                            Dashboard
+                          </Button>
+                        </Link>
+                        <div className="px-2 py-1.5 text-xs text-foreground/60 border-t border-border pt-2">
+                          {user.email}
+                        </div>
+                        <div className="px-2 py-1.5 text-xs text-foreground/70 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Bookmark className="h-3.5 w-3.5" />
+                            Bookmarked
+                          </div>
+                          <span className="text-xs font-medium bg-foreground/10 px-2 py-0.5 rounded-full">
+                            {bookmarksCount}
+                          </span>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            await signOut();
+                            setMobileMenuOpen(false);
+                          }}
+                          className="w-full px-2 py-1.5 text-xs text-foreground/70 hover:bg-muted rounded-md cursor-pointer transition-colors flex items-center gap-2"
                         >
-                          Dashboard
-                        </Button>
-                      </Link>
+                          <LogOut className="h-3.5 w-3.5" />
+                          Sign out
+                        </button>
+                      </div>
                     ) : (
                       <Link href="/auth/signup" onClick={() => setMobileMenuOpen(false)}>
                         <Button

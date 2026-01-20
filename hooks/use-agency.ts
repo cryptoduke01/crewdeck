@@ -16,6 +16,8 @@ export interface Agency {
   priceRangeMin?: number;
   priceRangeMax?: number;
   verified: boolean;
+  featured?: boolean;
+  premium?: boolean;
   description?: string;
   website?: string;
   email?: string;

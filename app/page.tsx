@@ -22,7 +22,7 @@ export default function Home() {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative pt-32 pb-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative pt-24 sm:pt-32 pb-20 sm:pb-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
         {/* Stacked layers background effect */}
         <div className="absolute inset-0 -z-10 opacity-5">
           <div className="absolute top-20 left-10 w-72 h-72 bg-foreground rounded-3xl rotate-6 blur-3xl"></div>
@@ -30,31 +30,31 @@ export default function Home() {
           <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-foreground rounded-3xl rotate-45 blur-3xl"></div>
         </div>
         
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-4xl">
           <div className="text-center">
             {/* Logo showcase */}
-            <div className="mb-12 flex justify-center">
+            <div className="mb-8 sm:mb-10 flex justify-center">
               <div className="relative">
-                <Logo variant="standalone" size={120} className="h-20 w-20 opacity-90" />
+                <Logo variant="standalone" size={80} className="h-16 w-16 sm:h-20 sm:w-20 opacity-90" />
                 <div className="absolute inset-0 bg-gradient-to-br from-foreground/20 to-transparent rounded-full blur-2xl -z-10"></div>
               </div>
             </div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-8 leading-tight tracking-tight">
-              <span className="block mb-2">The Marketing</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight tracking-tight">
+              <span className="block mb-1">The Marketing</span>
               <span className="block bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
                 Agency Aggregator
               </span>
-              <span className="block text-3xl sm:text-4xl lg:text-5xl font-medium text-foreground/70 mt-4">
+              <span className="block text-2xl sm:text-3xl lg:text-4xl font-medium text-foreground/70 mt-3">
                 for Web3 Projects
               </span>
             </h1>
 
-            <p className="text-lg sm:text-xl text-foreground/70 max-w-3xl mx-auto mb-12 px-2 leading-relaxed">
+            <p className="text-lg sm:text-xl text-foreground/70 max-w-2xl mx-auto mb-8 sm:mb-10 px-2 leading-relaxed">
               Browse vetted marketing agencies all in one place. Compare services, portfolios, pricing, and reviews to find the perfect match for your project.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-16">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12 sm:mb-16">
               <Link href="/agencies" className="cursor-pointer w-full sm:w-auto">
                 <Button size="default" className="group cursor-pointer w-full sm:w-auto px-6 shadow-md hover:shadow-lg transition-all">
                   Browse Agencies
@@ -69,18 +69,18 @@ export default function Home() {
             </div>
 
             {/* Stats or social proof */}
-            <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto pt-8 border-t border-border/50">
+            <div className="grid grid-cols-3 gap-6 sm:gap-8 max-w-xl mx-auto pt-6 sm:pt-8 border-t border-border/50">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-foreground">100+</div>
-                <div className="text-xs sm:text-sm text-foreground/60 mt-1">Agencies</div>
+                <div className="text-xl sm:text-2xl font-bold text-foreground">100+</div>
+                <div className="text-xs text-foreground/60 mt-1">Agencies</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-foreground">Verified</div>
-                <div className="text-xs sm:text-sm text-foreground/60 mt-1">Quality</div>
+                <div className="text-xl sm:text-2xl font-bold text-foreground">Verified</div>
+                <div className="text-xs text-foreground/60 mt-1">Quality</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-foreground">Web3</div>
-                <div className="text-xs sm:text-sm text-foreground/60 mt-1">Focused</div>
+                <div className="text-xl sm:text-2xl font-bold text-foreground">Web3</div>
+                <div className="text-xs text-foreground/60 mt-1">Focused</div>
               </div>
             </div>
           </div>
@@ -275,6 +275,11 @@ export default function Home() {
                 <li>
                   <Link href="/auth/signup" className="hover:text-foreground transition-colors cursor-pointer">
                     Join as Agency
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/pricing" className="hover:text-foreground transition-colors cursor-pointer">
+                    Pricing
                   </Link>
                 </li>
               </ul>

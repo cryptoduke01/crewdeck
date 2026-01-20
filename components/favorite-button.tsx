@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFavorites } from "@/hooks/use-favorites";
 import { motion } from "framer-motion";
@@ -24,15 +24,16 @@ export function FavoriteButton({ agencyId, variant = "ghost", size = "default" }
         toggleFavorite(agencyId);
       }}
       className="cursor-pointer"
+      title={isFavorite(agencyId) ? "Remove bookmark" : "Bookmark agency"}
     >
       <motion.div
         animate={{ scale: isFavorite(agencyId) ? [1, 1.2, 1] : 1 }}
         transition={{ duration: 0.3 }}
       >
-        <Heart
+        <Bookmark
           className={`h-4 w-4 ${
             isFavorite(agencyId)
-              ? "fill-red-500 text-red-500"
+              ? "fill-foreground text-foreground"
               : "fill-none text-foreground/40"
           }`}
         />

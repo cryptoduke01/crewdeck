@@ -23,7 +23,7 @@ import { Loading } from "@/components/loading";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/lib/toast/context";
 import { exportToCSV } from "@/lib/export";
-import { Download, Sparkles } from "lucide-react";
+import { Download, Sparkles, Crown } from "lucide-react";
 
 // Disable static generation for this page
 export const dynamic = 'force-dynamic';
@@ -179,6 +179,31 @@ export default function AdminPage() {
       );
     } catch (err) {
       showError("Failed to update featured status", err instanceof Error ? err.message : "Unknown error");
+    }
+  };
+
+  const handlePremiumToggle = async (agencyId: string, currentStatus: boolean) => {
+    try {
+      const supabase = createSupabaseClient();
+      const premiumUntil = currentStatus ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { error } = await supabase
+        .from("agencies")
+        .update({ 
+          premium: !currentStatus,
+          premium_until: premiumUntil
+        })
+        .eq("id", agencyId);
+
+      if (error) throw error;
+
+      showSuccess("Premium status updated", `Agency ${currentStatus ? "removed from premium" : "upgraded to premium"} successfully.`);
+      setAgencies((prev) =>
+        prev.map((agency) =>
+          agency.id === agencyId ? { ...agency, premium: !currentStatus } : agency
+        )
+      );
+    } catch (err) {
+      showError("Failed to update premium status", err instanceof Error ? err.message : "Unknown error");
     }
   };
 
@@ -401,7 +426,7 @@ export default function AdminPage() {
                       Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-foreground/60 uppercase tracking-wider">
-                      Featured
+                      Plan
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-foreground/60 uppercase tracking-wider">
                       Rating
@@ -445,14 +470,21 @@ export default function AdminPage() {
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        {agency.featured ? (
-                          <div className="flex items-center gap-1">
-                            <Sparkles className="h-3.5 w-3.5 text-foreground/60" />
-                            <span className="text-xs text-foreground/60">Yes</span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-foreground/40">No</span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {(agency as any).premium ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-foreground/10 text-foreground border border-foreground/20">
+                              <Crown className="h-3 w-3" />
+                              Premium
+                            </span>
+                          ) : agency.featured ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-orange-500/10 text-orange-500 border border-orange-500/20">
+                              <Sparkles className="h-3 w-3" />
+                              Featured
+                            </span>
+                          ) : (
+                            <span className="text-xs text-foreground/40">Free</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1">
@@ -477,11 +509,20 @@ export default function AdminPage() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => handlePremiumToggle(agency.id, (agency as any).premium || false)}
+                            className={`gap-1 cursor-pointer ${(agency as any).premium ? "text-foreground hover:text-foreground/80" : "text-foreground/60 hover:text-foreground"}`}
+                            title={(agency as any).premium ? "Remove Premium" : "Make Premium"}
+                          >
+                            <Crown className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleFeaturedToggle(agency.id, agency.featured || false)}
                             className={`gap-1 cursor-pointer ${agency.featured ? "text-orange-500 hover:text-orange-600" : "text-foreground/60 hover:text-foreground"}`}
+                            title={agency.featured ? "Unfeature" : "Feature"}
                           >
                             <Sparkles className="h-3.5 w-3.5" />
-                            {agency.featured ? "Unfeature" : "Feature"}
                           </Button>
                           <Button
                             variant="ghost"

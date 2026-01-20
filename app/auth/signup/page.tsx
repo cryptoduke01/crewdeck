@@ -8,6 +8,7 @@ import { Mail, Building2, ArrowRight } from "lucide-react";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/lib/auth/context";
 import { useToast } from "@/lib/toast/context";
@@ -16,6 +17,7 @@ import { PasswordInput } from "@/components/password-input";
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [agencyName, setAgencyName] = useState("");
   const [loading, setLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
@@ -26,6 +28,12 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    if (password !== confirmPassword) {
+      showError("Passwords don't match", "Please make sure both passwords are the same");
+      setLoading(false);
+      return;
+    }
 
     if (password.length < 6) {
       showError("Invalid password", "Password must be at least 6 characters");
@@ -42,18 +50,28 @@ export default function SignupPage() {
     const { error } = await signUp(email, password, agencyName);
 
     if (error) {
-      showError("Signup failed", error.message);
+      // Show more helpful error message
+      let errorTitle = "Signup failed";
+      let errorMessage = error.message;
+      
+      // If it's a duplicate email error, provide more context
+      if (error.message?.includes('already registered')) {
+        errorTitle = "Email already exists";
+        errorMessage = error.message + "\n\nTo fix this:\n1. Go to Supabase Dashboard > Authentication > Users\n2. Find and delete the user with this email\n3. Try signing up again\n\nOr use a different email address.";
+      }
+      
+      showError(errorTitle, errorMessage);
       setLoading(false);
     } else {
       showSuccess(
-        "Welcome to crewdeck!", 
-        `Thanks for joining, ${agencyName}! We've sent a welcome email with next steps.`,
-        4000
+        "Account created!", 
+        `Welcome, ${agencyName}! Redirecting to plan selection...`,
+        2000
       );
-      // Redirect to login after showing message
+      // Redirect to plan selection after showing message
       setTimeout(() => {
-        router.push("/auth/login");
-      }, 3000);
+        router.push("/auth/signup/select-plan");
+      }, 2000);
     }
   };
 
@@ -139,6 +157,20 @@ export default function SignupPage() {
                 <p className="text-xs text-foreground/50">Must be at least 6 characters, 8+ recommended</p>
               </div>
 
+              <div className="space-y-2">
+                <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground/80">
+                  Confirm Password
+                </label>
+                <PasswordInput
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  showStrengthBar={false}
+                />
+              </div>
+
               <Button
                 type="submit"
                 disabled={loading}
@@ -159,15 +191,28 @@ export default function SignupPage() {
               </Button>
             </form>
 
-            <div className="mt-6 text-center text-sm text-foreground/60">
-              Already have an account?{" "}
-              <Link href="/auth/login" className="text-foreground hover:underline cursor-pointer">
-                Sign in
-              </Link>
+            <div className="mt-6 space-y-3">
+              <div className="text-center text-sm text-foreground/60">
+                Already have an account?{" "}
+                <Link href="/auth/login" className="text-foreground hover:underline cursor-pointer">
+                  Sign in
+                </Link>
+              </div>
+              <div className="text-center text-xs text-foreground/50">
+                By signing up, you agree to our{" "}
+                <Link href="/terms" className="underline hover:text-foreground/70 transition-colors cursor-pointer">
+                  Terms and Conditions
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" className="underline hover:text-foreground/70 transition-colors cursor-pointer">
+                  Privacy Policy
+                </Link>
+              </div>
             </div>
           </motion.div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

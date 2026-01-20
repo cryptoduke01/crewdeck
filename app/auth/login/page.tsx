@@ -8,6 +8,7 @@ import { Mail, ArrowRight } from "lucide-react";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/lib/auth/context";
 import { useToast } from "@/lib/toast/context";
@@ -130,6 +131,7 @@ export default function LoginPage() {
           </motion.div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

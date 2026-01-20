@@ -86,15 +86,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (authError) {
-        // Better error message for existing users
-        if (authError.message?.includes('already registered') || authError.message?.includes('already exists')) {
+        // Log the full error for debugging
+        console.error("Signup auth error:", {
+          message: authError.message,
+          status: authError.status,
+          code: authError.code,
+          fullError: authError
+        });
+        
+        // Check for specific error codes and messages
+        const errorMessage = authError.message?.toLowerCase() || '';
+        const errorCode = authError.status || authError.code || '';
+        const supabaseErrorCode = authError.code || '';
+        
+        // Handle "user already registered" error
+        // This happens when email exists in auth.users (even if unconfirmed)
+        if (
+          errorCode === 422 || 
+          supabaseErrorCode === 'user_already_exists' ||
+          errorMessage.includes('user already registered') ||
+          errorMessage.includes('email already registered') ||
+          errorMessage.includes('already exists')
+        ) {
+          // Try to sign in with the email to check if account exists and is confirmed
+          // If it's unconfirmed, we can't do much - user needs to delete from Supabase Dashboard
           return { 
             error: new Error(
-              'This email is already registered. Please sign in instead, or delete the user from Supabase Auth (Authentication > Users) if you want to recreate the account.'
+              'This email is already registered. If you haven\'t confirmed your email, please delete the account from Supabase Dashboard (Authentication > Users) or use a different email address. Otherwise, please sign in.'
             ) 
           };
         }
-        return { error: authError };
+        
+        // For other errors, return a more user-friendly message
+        return { 
+          error: new Error(
+            authError.message || 'Failed to create account. Please try again.'
+          ) 
+        };
       }
 
       if (!data.user) {
@@ -112,22 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         agencyName,
       });
 
-      // Check if user already has an agency (prevent duplicates)
-      const { data: existingAgency } = await supabase
-        .from("agencies")
-        .select("id")
-        .eq("user_id", data.user.id)
-        .maybeSingle();
-
-      if (existingAgency) {
-        return { 
-          error: new Error(
-            "You already have an agency profile. Please edit your existing profile instead."
-          ) 
-        };
-      }
-
-      // Make slug unique by appending user ID suffix if needed
+      // Make slug unique by appending user ID suffix
       const uniqueSlug = `${baseSlug}-${data.user.id.substring(0, 8)}`;
 
       // Try to create agency directly (works if email confirmation is disabled)

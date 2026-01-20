@@ -23,13 +23,14 @@ import { analytics } from "@/lib/analytics/client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { FilterModal } from "@/components/filter-modal";
 import { SearchAutocomplete } from "@/components/search-autocomplete";
-import { SlidersHorizontal, Sparkles } from "lucide-react";
+import { SlidersHorizontal, Sparkles, Crown } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { highlightText } from "@/lib/search/highlight";
 
 const niches = ["All", "DeFi", "NFT", "Web3", "Gaming", "Metaverse"];
 const locations = ["All", "Remote", "New York, US", "San Francisco, US", "Los Angeles, US", "Austin, US", "Seattle, US"];
 const sortOptions: { value: SortOption; label: string }[] = [
+  { value: "featured", label: "Featured First" },
   { value: "rating", label: "Highest Rated" },
   { value: "reviews", label: "Most Reviews" },
   { value: "price-low", label: "Price: Low to High" },
@@ -350,9 +351,17 @@ export default function AgenciesPage() {
                   {/* Stacked layers effect */}
                   <div className="absolute inset-0 bg-foreground/5 rounded-xl blur-xl group-hover:bg-foreground/10 transition-all -z-10" style={{ transform: `translate(${index % 3 * 2}px, ${index % 3 * 2}px)` }}></div>
                   
-                  <div className="relative p-6 rounded-xl border-2 border-border bg-card hover:border-foreground/40 hover:shadow-xl transition-all h-full flex flex-col">
-                    {/* Featured Badge */}
-                    {(agency as any).featured && (
+                  <div className="relative p-6 rounded-xl border-2 border-border bg-card hover:border-foreground/40 hover:shadow-md transition-all h-full flex flex-col">
+                    {/* Premium/Featured Badge */}
+                    {agency.premium && (
+                      <div className="absolute top-4 right-4">
+                        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-foreground text-background border border-foreground">
+                          <Crown className="h-3 w-3" />
+                          <span className="text-xs font-medium">Premium</span>
+                        </div>
+                      </div>
+                    )}
+                    {!agency.premium && agency.featured && (
                       <div className="absolute top-4 right-4">
                         <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-foreground/10 border border-foreground/20">
                           <Sparkles className="h-3 w-3 text-foreground/60" />
