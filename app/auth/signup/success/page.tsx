@@ -9,6 +9,9 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Logo } from "@/components/logo";
 
+// Disable static generation - this page uses searchParams
+export const dynamic = 'force-dynamic';
+
 export default function SignupSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
