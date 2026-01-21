@@ -89,7 +89,7 @@ export default function AdminPage() {
 
       // Fetch agencies
       const { data: agenciesData, error: agenciesError } = await supabase
-        .from("agencies")
+        .from("profiles")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -97,11 +97,11 @@ export default function AdminPage() {
 
       // Fetch stats
       const { count: totalAgencies } = await supabase
-        .from("agencies")
+        .from("profiles")
         .select("*", { count: "exact", head: true });
 
       const { count: verifiedAgencies } = await supabase
-        .from("agencies")
+        .from("profiles")
         .select("*", { count: "exact", head: true })
         .eq("verified", true);
 
@@ -133,7 +133,7 @@ export default function AdminPage() {
     try {
       const supabase = createSupabaseClient();
       const { error } = await supabase
-        .from("agencies")
+        .from("profiles")
         .update({ verified })
         .eq("id", agencyId);
 
@@ -161,51 +161,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleFeaturedToggle = async (agencyId: string, currentStatus: boolean) => {
-    try {
-      const supabase = createSupabaseClient();
-      const { error } = await supabase
-        .from("agencies")
-        .update({ featured: !currentStatus })
-        .eq("id", agencyId);
-
-      if (error) throw error;
-
-      showSuccess("Featured status updated", `Agency ${currentStatus ? "unfeatured" : "featured"} successfully.`);
-      setAgencies((prev) =>
-        prev.map((agency) =>
-          agency.id === agencyId ? { ...agency, featured: !currentStatus } : agency
-        )
-      );
-    } catch (err) {
-      showError("Failed to update featured status", err instanceof Error ? err.message : "Unknown error");
-    }
-  };
-
-  const handlePremiumToggle = async (agencyId: string, currentStatus: boolean) => {
-    try {
-      const supabase = createSupabaseClient();
-      const premiumUntil = currentStatus ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-      const { error } = await supabase
-        .from("agencies")
-        .update({ 
-          premium: !currentStatus,
-          premium_until: premiumUntil
-        })
-        .eq("id", agencyId);
-
-      if (error) throw error;
-
-      showSuccess("Premium status updated", `Agency ${currentStatus ? "removed from premium" : "upgraded to premium"} successfully.`);
-      setAgencies((prev) =>
-        prev.map((agency) =>
-          agency.id === agencyId ? { ...agency, premium: !currentStatus } : agency
-        )
-      );
-    } catch (err) {
-      showError("Failed to update premium status", err instanceof Error ? err.message : "Unknown error");
-    }
-  };
+  // Removed featured and premium toggles - monetization removed
 
   const handleDelete = async (agencyId: string, agencyName: string) => {
     if (!confirm(`Are you sure you want to delete "${agencyName}"? This action cannot be undone.`)) {
@@ -215,7 +171,7 @@ export default function AdminPage() {
     try {
       const supabase = createSupabaseClient();
       const { error } = await supabase
-        .from("agencies")
+        .from("profiles")
         .delete()
         .eq("id", agencyId);
 

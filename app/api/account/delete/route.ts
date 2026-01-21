@@ -30,14 +30,14 @@ export async function POST(request: Request) {
       }
     );
 
-    // Delete user's agency data first (cascade should handle this, but being explicit)
-    const { error: agencyError } = await supabaseAdmin
-      .from("agencies")
+    // Delete user's profile data first (cascade should handle this, but being explicit)
+    const { error: profileError } = await supabaseAdmin
+      .from("profiles")
       .delete()
       .eq("user_id", user.id);
 
-    if (agencyError) {
-      console.error("Error deleting agency:", agencyError);
+    if (profileError) {
+      console.error("Error deleting profile:", profileError);
       // Continue anyway - user deletion is more important
     }
 

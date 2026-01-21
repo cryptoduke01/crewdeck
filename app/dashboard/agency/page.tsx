@@ -65,7 +65,7 @@ export default function AgencyDashboardPage() {
         const { count: messagesCount } = await supabase
           .from("messages")
           .select("*", { count: "exact", head: true })
-          .eq("agency_id", agency.id);
+          .eq("profile_id", agency.id);
 
         setStats({
           messages: messagesCount || 0,

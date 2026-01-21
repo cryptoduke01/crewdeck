@@ -61,11 +61,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, agencyName: string) => {
+  const signUp = async (email: string, password: string, profileName: string, profileType: "agency" | "kol") => {
     try {
-      let baseSlug = agencyName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+      let baseSlug = profileName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
       
-      // Create user with agency name in metadata (for trigger to use)
+      // Create user with profile data in metadata (for trigger to use)
       // Enable email confirmation - Supabase will send verification email
       const redirectUrl = typeof window !== "undefined" 
         ? `${window.location.origin}/auth/callback`
@@ -79,8 +79,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            agency_name: agencyName,
-            agency_slug: baseSlug,
+            profile_name: profileName,
+            profile_slug: baseSlug,
+            profile_type: profileType,
           },
         },
       });

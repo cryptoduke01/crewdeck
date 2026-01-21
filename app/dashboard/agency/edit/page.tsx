@@ -79,7 +79,7 @@ export default function EditProfilePage() {
       const { data } = await supabase
         .from("portfolio")
         .select("*")
-        .eq("agency_id", agencyId)
+        .eq("profile_id", agencyId)
         .order("created_at", { ascending: false });
       
       if (data) {
@@ -132,26 +132,26 @@ export default function EditProfilePage() {
         : `${baseSlug}-${user.id.substring(0, 8)}-${Date.now().toString().slice(-6)}`;
 
       if (isCreating) {
-        // Check if user already has an agency (prevent duplicates)
-        const { data: existingAgency } = await supabase
-          .from("agencies")
+        // Check if user already has a profile (prevent duplicates)
+        const { data: existingProfile } = await supabase
+          .from("profiles")
           .select("id")
           .eq("user_id", user.id)
           .maybeSingle();
 
-        if (existingAgency) {
+        if (existingProfile) {
           showError(
-            "Agency already exists",
-            "You already have an agency profile. Please refresh the page to edit it."
+            "Profile already exists",
+            "You already have a profile. Please refresh the page to edit it."
           );
           await refetch();
           router.push("/dashboard/agency");
           return;
         }
 
-        // Create new agency
-        const { data: newAgency, error: createError } = await supabase
-          .from("agencies")
+        // Create new profile
+        const { data: newProfile, error: createError } = await supabase
+          .from("profiles")
           .insert({
             name: formData.name,
             slug: uniqueSlug,
@@ -161,11 +161,12 @@ export default function EditProfilePage() {
             website: formData.website || null,
             email: formData.email || null,
             founded: formData.founded ? parseInt(formData.founded) : null,
-            team_size: formData.teamSize || null,
+            team_size: formData.teamSize ? parseInt(formData.teamSize) : null,
             price_range_min: priceMin,
             price_range_max: priceMax,
             verified: true, // Auto-verify for development (change to false for production)
             user_id: user.id,
+            profile_type: "agency", // Default to agency for now
           })
           .select()
           .single();
@@ -187,7 +188,7 @@ export default function EditProfilePage() {
         // Update services for new agency
         if (services.length > 0 && newAgency) {
           const servicesToInsert = services.map((service) => ({
-            agency_id: newAgency.id,
+            profile_id: newAgency.id,
             name: service,
           }));
 
@@ -244,13 +245,13 @@ export default function EditProfilePage() {
         const { error: deleteError } = await supabase
           .from("services")
           .delete()
-          .eq("agency_id", agency.id);
+          .eq("profile_id", agency.id);
 
         if (deleteError) throw deleteError;
 
         if (services.length > 0) {
           const servicesToInsert = services.map((service) => ({
-            agency_id: agency.id,
+            profile_id: agency.id,
             name: service,
           }));
 
@@ -312,7 +313,7 @@ export default function EditProfilePage() {
       const itemsToInsert = portfolioItems
         .filter(item => item.title.trim() !== "") // Only save items with titles
         .map((item) => ({
-          agency_id: agencyId,
+          profile_id: agencyId,
           title: item.title,
           description: item.description || null,
           image: item.image || null,

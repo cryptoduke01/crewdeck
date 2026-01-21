@@ -3,9 +3,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { createSupabaseClient } from "@/lib/supabase/client";
 
-export interface Agency {
+export interface Profile {
   id: string;
   name: string;
+  slug?: string;
+  profile_type: "agency" | "kol";
   niche: string;
   rating: number;
   reviews: number;
@@ -15,16 +17,28 @@ export interface Agency {
   priceRangeMin?: number;
   priceRangeMax?: number;
   verified: boolean;
-  featured?: boolean;
-  premium?: boolean;
   description?: string;
   website?: string;
   email?: string;
+  // KOL-specific fields
+  twitter_handle?: string;
+  twitter_followers?: number;
+  engagement_rate?: number;
+  content_types?: string[];
+  price_per_thread?: number;
+  price_per_video?: number;
+  price_per_space?: number;
+  wallet_verified?: boolean;
+  solana_wallet?: string;
 }
+
+// Keep Agency as alias for backward compatibility during migration
+export type Agency = Profile;
 
 export type SortOption = "rating" | "price-low" | "price-high" | "newest" | "reviews" | "featured";
 
 export function useAgencies(options?: {
+  profileType?: "agency" | "kol" | "all";
   niche?: string;
   searchQuery?: string;
   location?: string;
@@ -33,7 +47,7 @@ export function useAgencies(options?: {
   services?: string[];
   sortBy?: SortOption;
 }) {
-  const [agencies, setAgencies] = useState<Agency[]>([]);
+  const [agencies, setAgencies] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,9 +64,16 @@ export function useAgencies(options?: {
           const supabase = createSupabaseClient();
           
           let query = supabase
-            .from("agencies")
-            .select("*")
-            .order("featured", { ascending: false }); // Featured agencies first
+            .from("profiles")
+            .select("*");
+
+          // Filter by profile type
+          if (options?.profileType && options.profileType !== "all") {
+            query = query.eq("profile_type", options.profileType);
+          }
+          
+          // Default ordering by rating
+          query = query.order("rating", { ascending: false });
           
           // Only filter by verified if we have verified agencies, otherwise show all
           // This allows testing with unverified agencies
@@ -110,8 +131,8 @@ export function useAgencies(options?: {
                 break;
             }
           } else {
-            // Default: Featured/Premium first, then by rating
-            query = query.order("premium", { ascending: false }).order("featured", { ascending: false }).order("rating", { ascending: false });
+            // Default: Rating first (removed premium/featured as we're not using monetization)
+            // Keep as rating-based sorting
           }
 
           const { data, error: queryError } = await query;
@@ -119,62 +140,72 @@ export function useAgencies(options?: {
           if (queryError) throw queryError;
 
           // Fetch all services in one query (fixes N+1 problem)
-          const agencyIds = (data || []).map((a: any) => a.id);
+          const profileIds = (data || []).map((a: any) => a.id);
           let servicesMap: Record<string, string[]> = {};
           
-          if (agencyIds.length > 0) {
+          if (profileIds.length > 0) {
             const { data: allServices } = await supabase
               .from("services")
-              .select("agency_id, name")
-              .in("agency_id", agencyIds);
+              .select("profile_id, name")
+              .in("profile_id", profileIds);
 
-            // Group services by agency_id
+            // Group services by profile_id
             servicesMap = (allServices || []).reduce((acc: Record<string, string[]>, service: any) => {
-              if (!acc[service.agency_id]) {
-                acc[service.agency_id] = [];
+              if (!acc[service.profile_id]) {
+                acc[service.profile_id] = [];
               }
-              acc[service.agency_id].push(service.name);
+              acc[service.profile_id].push(service.name);
               return acc;
             }, {});
           }
 
-          // Transform agencies with services from map
-          const agenciesWithServices = (data || []).map((agency: any) => ({
-            id: agency.id,
-            name: agency.name,
-            niche: agency.niche,
-            rating: parseFloat(agency.rating) || 0,
-            reviews: agency.review_count || 0,
-            location: agency.location || "Remote",
-            services: servicesMap[agency.id] || [],
-            priceRange: agency.price_range_min && agency.price_range_max
-              ? `$${agency.price_range_min.toLocaleString()} - $${agency.price_range_max.toLocaleString()}`
+          // Transform profiles with services from map
+          const profilesWithServices = (data || []).map((profile: any) => ({
+            id: profile.id,
+            name: profile.name,
+            slug: profile.slug,
+            profile_type: profile.profile_type || "agency",
+            niche: profile.niche,
+            rating: parseFloat(profile.rating) || 0,
+            reviews: profile.review_count || 0,
+            location: profile.location || "Remote",
+            services: servicesMap[profile.id] || [],
+            priceRange: profile.price_range_min && profile.price_range_max
+              ? `$${profile.price_range_min.toLocaleString()} - $${profile.price_range_max.toLocaleString()}`
               : "Contact for pricing",
-            priceRangeMin: agency.price_range_min,
-            priceRangeMax: agency.price_range_max,
-            verified: agency.verified || false,
-            featured: agency.featured || false,
-            premium: agency.premium || false,
-            description: agency.description,
-            website: agency.website,
-            email: agency.email,
+            priceRangeMin: profile.price_range_min,
+            priceRangeMax: profile.price_range_max,
+            verified: profile.verified || false,
+            description: profile.description,
+            website: profile.website,
+            email: profile.email,
+            // KOL-specific fields
+            twitter_handle: profile.twitter_handle,
+            twitter_followers: profile.twitter_followers,
+            engagement_rate: profile.engagement_rate ? parseFloat(profile.engagement_rate) : undefined,
+            content_types: profile.content_types || [],
+            price_per_thread: profile.price_per_thread,
+            price_per_video: profile.price_per_video,
+            price_per_space: profile.price_per_space,
+            wallet_verified: profile.wallet_verified || false,
+            solana_wallet: profile.solana_wallet,
           }));
 
           // Filter by services if specified
-          let filteredAgencies = agenciesWithServices;
+          let filteredProfiles = profilesWithServices;
           if (options?.services && options.services.length > 0) {
-            filteredAgencies = agenciesWithServices.filter(agency =>
+            filteredProfiles = profilesWithServices.filter(profile =>
               options.services!.some(selectedService =>
-                agency.services.some((service: string) =>
+                profile.services.some((service: string) =>
                   service.toLowerCase().includes(selectedService.toLowerCase())
                 )
               )
             );
           }
 
-          const transformedAgencies: Agency[] = filteredAgencies;
+          const transformedProfiles: Profile[] = filteredProfiles;
 
-          setAgencies(transformedAgencies);
+          setAgencies(transformedProfiles);
         } else {
           // Supabase not configured - show empty state
           setAgencies([]);

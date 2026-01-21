@@ -44,7 +44,7 @@ export function ReviewForm({ agencyId, agencyName, onSuccess }: ReviewFormProps)
       const { error: reviewError } = await supabase
         .from("reviews")
         .insert({
-          agency_id: agencyId,
+          profile_id: agencyId,
           rating: rating,
           comment: comment.trim(),
           author: author.trim() || null,
@@ -65,9 +65,9 @@ export function ReviewForm({ agencyId, agencyName, onSuccess }: ReviewFormProps)
         const averageRating = totalRating / reviewsData.length;
         const reviewCount = reviewsData.length;
 
-        // Update agency rating and review count
+        // Update profile rating and review count
         const { error: updateError } = await supabase
-          .from("agencies")
+          .from("profiles")
           .update({
             rating: averageRating.toFixed(2),
             review_count: reviewCount,
@@ -77,15 +77,15 @@ export function ReviewForm({ agencyId, agencyName, onSuccess }: ReviewFormProps)
         if (updateError) throw updateError;
       }
 
-      // Fetch agency email to send notification
-      const { data: agencyData } = await supabase
-        .from("agencies")
+      // Fetch profile email to send notification
+      const { data: profileData } = await supabase
+        .from("profiles")
         .select("email")
         .eq("id", agencyId)
         .single();
 
-      // Send email notification to agency (non-blocking)
-      if (agencyData?.email) {
+      // Send email notification to profile (non-blocking)
+      if (profileData?.email) {
         const reviewUrl = `${window.location.origin}/agencies/${agencyId}`;
         const reviewPreview = comment.trim().substring(0, 200);
         

@@ -51,7 +51,7 @@ export default function MessagesPage() {
         const { data, error } = await supabase
           .from("messages")
           .select("*")
-          .eq("agency_id", agency.id)
+          .eq("profile_id", agency.id)
           .order("created_at", { ascending: false });
 
         if (error) throw error;

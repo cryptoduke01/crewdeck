@@ -13,12 +13,14 @@ import { Logo } from "@/components/logo";
 import { useAuth } from "@/lib/auth/context";
 import { useToast } from "@/lib/toast/context";
 import { PasswordInput } from "@/components/password-input";
+import { ProfileTypeSelector } from "@/components/profile-type-selector";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [agencyName, setAgencyName] = useState("");
+  const [profileName, setProfileName] = useState("");
+  const [profileType, setProfileType] = useState<"agency" | "kol" | null>(null);
   const [loading, setLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const { signUp } = useAuth();
@@ -47,7 +49,13 @@ export default function SignupPage() {
       return;
     }
 
-    const { error } = await signUp(email, password, agencyName);
+    if (!profileType) {
+      showError("Profile type required", "Please select whether you're an agency or KOL");
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await signUp(email, password, profileName, profileType);
 
     if (error) {
       // Show more helpful error message
@@ -65,12 +73,12 @@ export default function SignupPage() {
     } else {
       showSuccess(
         "Account created!", 
-        `Welcome, ${agencyName}! Redirecting to plan selection...`,
+        `Welcome, ${profileName}! Redirecting to dashboard...`,
         2000
       );
-      // Redirect to plan selection after showing message
+      // Redirect to dashboard after showing message
       setTimeout(() => {
-        router.push("/auth/signup/select-plan");
+        router.push("/dashboard/agency");
       }, 2000);
     }
   };
@@ -102,27 +110,48 @@ export default function SignupPage() {
             
             <h1 className="text-3xl font-bold mb-2 text-center">Create account</h1>
             <p className="text-sm text-foreground/70 mb-8 text-center">
-              Sign up to create and manage your agency profile.
+              Sign up to create and manage your profile.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <label htmlFor="agencyName" className="text-sm font-medium text-foreground/80">
-                  Agency name
+                <label className="text-sm font-medium text-foreground/80 mb-4 block">
+                  Choose Your Profile Type
                 </label>
-                <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-foreground/40" />
-                  <input
-                    id="agencyName"
-                    type="text"
-                    required
-                    value={agencyName}
-                    onChange={(e) => setAgencyName(e.target.value)}
-                    className="w-full h-11 pl-10 pr-4 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
-                    placeholder="Your Agency Name"
-                  />
-                </div>
+                <ProfileTypeSelector
+                  selectedType={profileType}
+                  onSelect={setProfileType}
+                />
               </div>
+
+              {profileType && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="profileName" className="text-sm font-medium text-foreground/80">
+                      {profileType === "agency" ? "Agency Name" : "Display Name"}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setProfileType(null)}
+                      className="text-xs text-foreground/60 hover:text-foreground transition-colors"
+                    >
+                      Change type
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-foreground/40" />
+                    <input
+                      id="profileName"
+                      type="text"
+                      required
+                      value={profileName}
+                      onChange={(e) => setProfileName(e.target.value)}
+                      className="w-full h-11 pl-10 pr-4 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                      placeholder={profileType === "agency" ? "Your Agency Name" : "Your Display Name"}
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium text-foreground/80">
@@ -173,7 +202,7 @@ export default function SignupPage() {
 
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !profileType}
                 className="w-full cursor-pointer"
                 size="lg"
               >

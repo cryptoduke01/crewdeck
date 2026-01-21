@@ -24,31 +24,31 @@ export function useMyAgency() {
 
         const supabase = createSupabaseClient();
 
-        // Fetch agency by user_id
-        const { data: agencyData, error: agencyError } = await supabase
-          .from("agencies")
+        // Fetch profile by user_id
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
           .select("*")
           .eq("user_id", user.id)
           .maybeSingle();
 
         // Log for debugging
-        if (agencyError) {
-          // If it's a "no rows" error, that's okay - user just doesn't have an agency yet
-          if (agencyError.code === 'PGRST116' || agencyError.message?.includes('No rows')) {
-            // This is expected - user doesn't have an agency yet
+        if (profileError) {
+          // If it's a "no rows" error, that's okay - user just doesn't have a profile yet
+          if (profileError.code === 'PGRST116' || profileError.message?.includes('No rows')) {
+            // This is expected - user doesn't have a profile yet
             setAgency(null);
             setLoading(false);
             return;
           }
           // For other errors, log and throw
-          console.error("Error fetching agency:", {
-            message: agencyError.message,
-            code: agencyError.code,
-            details: agencyError.details,
-            hint: agencyError.hint,
-            fullError: agencyError
+          console.error("Error fetching profile:", {
+            message: profileError.message,
+            code: profileError.code,
+            details: profileError.details,
+            hint: profileError.hint,
+            fullError: profileError
           });
-          throw agencyError;
+          throw profileError;
         }
 
         // Also log what we found
@@ -126,50 +126,58 @@ export function useMyAgency() {
 
       const supabase = createSupabaseClient();
 
-      const { data: agencyData, error: agencyError } = await supabase
-        .from("agencies")
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (agencyError && agencyError.code !== 'PGRST116') {
-        throw agencyError;
+      if (profileError && profileError.code !== 'PGRST116') {
+        throw profileError;
       }
 
-      if (agencyData) {
+      if (profileData) {
         const { data: servicesData } = await supabase
           .from("services")
           .select("name")
-          .eq("agency_id", agencyData.id);
+          .eq("profile_id", profileData.id);
 
         const services = servicesData?.map((s: any) => s.name) || [];
 
-        const transformedAgency: Agency = {
-          id: agencyData.id,
-          name: agencyData.name,
-          slug: agencyData.slug,
-          niche: agencyData.niche,
-          rating: parseFloat(agencyData.rating) || 0,
-          reviews: agencyData.review_count || 0,
-          location: agencyData.location || "Remote",
+        const transformedProfile: Agency = {
+          id: profileData.id,
+          name: profileData.name,
+          slug: profileData.slug,
+          profile_type: profileData.profile_type || "agency",
+          niche: profileData.niche,
+          rating: parseFloat(profileData.rating) || 0,
+          reviews: profileData.review_count || 0,
+          location: profileData.location || "Remote",
           services: services,
-          priceRange: agencyData.price_range_min && agencyData.price_range_max
-            ? `$${(agencyData.price_range_min / 1000).toFixed(0)}K - $${(agencyData.price_range_max / 1000).toFixed(0)}K`
+          priceRange: profileData.price_range_min && profileData.price_range_max
+            ? `$${(profileData.price_range_min / 1000).toFixed(0)}K - $${(profileData.price_range_max / 1000).toFixed(0)}K`
             : "Contact for pricing",
-          priceRangeMin: agencyData.price_range_min,
-          priceRangeMax: agencyData.price_range_max,
-          verified: agencyData.verified || false,
-          featured: agencyData.featured || false,
-          premium: agencyData.premium || false,
-          description: agencyData.description,
-          website: agencyData.website,
-          email: agencyData.email,
-          founded: agencyData.founded,
-          teamSize: agencyData.team_size,
-          walletAddress: agencyData.wallet_address,
+          priceRangeMin: profileData.price_range_min,
+          priceRangeMax: profileData.price_range_max,
+          verified: profileData.verified || false,
+          description: profileData.description,
+          website: profileData.website,
+          email: profileData.email,
+          founded: profileData.founded,
+          team_size: profileData.team_size,
+          solana_wallet: profileData.solana_wallet,
+          wallet_verified: profileData.wallet_verified || false,
+          // KOL-specific fields
+          twitter_handle: profileData.twitter_handle,
+          twitter_followers: profileData.twitter_followers,
+          engagement_rate: profileData.engagement_rate ? parseFloat(profileData.engagement_rate) : undefined,
+          content_types: profileData.content_types || [],
+          price_per_thread: profileData.price_per_thread,
+          price_per_video: profileData.price_per_video,
+          price_per_space: profileData.price_per_space,
         };
 
-        setAgency(transformedAgency);
+        setAgency(transformedProfile);
       } else {
         // Clear agency if none found
         setAgency(null);

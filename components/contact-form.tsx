@@ -67,9 +67,9 @@ export function ContactForm({ agencyId, agencyName, onSuccess }: ContactFormProp
         throw new Error("Message was not saved. Please try again.");
       }
 
-      // Fetch agency email to send notification
-      const { data: agencyData, error: fetchError } = await supabase
-        .from("agencies")
+      // Fetch profile email to send notification
+      const { data: profileData, error: fetchError } = await supabase
+        .from("profiles")
         .select("email")
         .eq("id", agencyId)
         .single();
@@ -79,8 +79,8 @@ export function ContactForm({ agencyId, agencyName, onSuccess }: ContactFormProp
         // Don't throw - message was saved, just email notification failed
       }
 
-      // Send email notification to agency (truly non-blocking - fire and forget)
-      if (agencyData?.email) {
+      // Send email notification to profile (truly non-blocking - fire and forget)
+      if (profileData?.email) {
         // Don't await - let it run in background
         const messageUrl = typeof window !== "undefined" 
           ? `${window.location.origin}/dashboard/agency/messages`
@@ -89,7 +89,7 @@ export function ContactForm({ agencyId, agencyName, onSuccess }: ContactFormProp
         
         // Fire and forget - don't block on email sending
         sendNewMessageNotification(
-          agencyData.email,
+          profileData.email,
           agencyName,
           formData.name,
           messagePreview,

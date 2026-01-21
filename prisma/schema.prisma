@@ -10,33 +10,43 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Agency {
+model Profile {
   id          String   @id @default(cuid())
+  user_id     String   @unique // Supabase auth user ID
   name        String
   slug        String   @unique
-  niche       String   // DeFi, NFT, Web3, etc.
+  profile_type String  @default("agency") // "agency" or "kol"
+  niche       String   // DeFi, NFT, Web3, Gaming, etc.
   description String?
   website     String?
   email       String?
   location    String?
   founded     Int?
-  teamSize    String?
+  team_size   Int?     // For agencies
+  
+  // KOL-specific fields
+  twitter_handle      String?
+  twitter_followers   Int?
+  engagement_rate     Decimal?  @db.Decimal(4, 2)
+  content_types       String[]  // ["threads", "videos", "spaces", "newsletters"]
+  price_per_thread    Int?
+  price_per_video     Int?
+  price_per_space     Int?
+  
+  // Solana wallet
+  solana_wallet       String?
+  wallet_verified     Boolean   @default(false)
   
   // Verification
   verified    Boolean  @default(false)
   
-  // Monetization
-  featured    Boolean  @default(false)
-  premium     Boolean  @default(false)
-  premiumUntil DateTime?
-  
   // Rating & Reviews
   rating      Float    @default(0)
-  reviewCount Int      @default(0)
+  review_count Int      @default(0)
   
-  // Pricing
-  priceRangeMin Int?
-  priceRangeMax Int?
+  // Pricing (for agencies)
+  price_range_min Int?
+  price_range_max Int?
   
   // Relations
   services    Service[]
@@ -45,22 +55,25 @@ model Agency {
   messages    Message[]
   
   // Metadata
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
   
+  @@index([profile_type])
   @@index([niche])
   @@index([verified])
+  @@index([twitter_followers])
+  @@index([wallet_verified])
 }
 
 model Service {
   id        String   @id @default(cuid())
   name      String
-  agencyId  String
-  agency    Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  profile_id  String
+  profile    Profile   @relation(fields: [profile_id], references: [id], onDelete: Cascade)
   
-  createdAt DateTime @default(now())
+  created_at DateTime @default(now())
   
-  @@index([agencyId])
+  @@index([profile_id])
 }
 
 model Portfolio {
@@ -69,12 +82,12 @@ model Portfolio {
   description String?
   image       String?
   metrics     String?
-  agencyId    String
-  agency      Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  profile_id    String
+  profile      Profile   @relation(fields: [profile_id], references: [id], onDelete: Cascade)
   
-  createdAt   DateTime @default(now())
+  created_at   DateTime @default(now())
   
-  @@index([agencyId])
+  @@index([profile_id])
 }
 
 model Review {
@@ -82,22 +95,22 @@ model Review {
   rating    Int      // 1-5
   comment   String?
   author    String?
-  agencyId  String
-  agency    Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  profile_id  String
+  profile    Profile   @relation(fields: [profile_id], references: [id], onDelete: Cascade)
   
-  createdAt DateTime @default(now())
+  created_at DateTime @default(now())
   
-  @@index([agencyId])
+  @@index([profile_id])
 }
 
 model Message {
   id        String   @id @default(cuid())
   content   String
-  agencyId  String
-  agency    Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  senderId  String?  // User ID
+  profile_id  String
+  profile    Profile   @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+  sender_id  String?  // User ID
   
-  createdAt DateTime @default(now())
+  created_at DateTime @default(now())
   
-  @@index([agencyId])
+  @@index([profile_id])
 }
