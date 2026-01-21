@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { LogOut, Edit, Mail, TrendingUp, Eye, Trash2, AlertTriangle, Briefcase, Sparkles } from "lucide-react";
+import { LogOut, Edit, Mail, TrendingUp, Eye, User, Trash2, AlertTriangle, Copy, Twitter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
 import { useAuth } from "@/lib/auth/context";
@@ -15,7 +15,7 @@ import { createSupabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/lib/toast/context";
 import { FavoriteButton } from "@/components/favorite-button";
 
-export default function AgencyDashboardPage() {
+export default function KOLDashboardPage() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { agency, loading: agencyLoading, refetch } = useMyAgency();
   const router = useRouter();
@@ -27,6 +27,7 @@ export default function AgencyDashboardPage() {
   });
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -34,21 +35,12 @@ export default function AgencyDashboardPage() {
     }
   }, [user, authLoading, router]);
 
-  // Redirect KOLs to their dashboard
+  // Redirect KOLs away from agency dashboard
   useEffect(() => {
-    if (agency && (agency as any)?.profile_type === "kol") {
-      router.replace("/dashboard/kol");
-      return;
+    if (agency && (agency as any)?.profile_type !== "kol") {
+      router.replace("/dashboard/agency");
     }
   }, [agency, router]);
-
-  // Refetch agency data when user is available (after auth loads)
-  useEffect(() => {
-    if (user && !authLoading) {
-      refetch();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading]); // Run when user/auth state changes
 
   useEffect(() => {
     async function fetchStats() {
@@ -89,7 +81,9 @@ export default function AgencyDashboardPage() {
     return null;
   }
 
-  // If no agency exists, show setup banner
+  const kol = agency as any;
+
+  // If no profile exists, show setup banner
   if (!agencyLoading && !agency) {
     return (
       <div className="min-h-screen bg-background">
@@ -103,19 +97,18 @@ export default function AgencyDashboardPage() {
               transition={{ duration: 0.5 }}
               className="mb-8 p-6 rounded-xl border-2 border-foreground/20 bg-gradient-to-br from-card to-card/50 shadow-lg relative overflow-hidden"
             >
-              {/* Background decoration */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-foreground/5 rounded-full blur-3xl -z-10"></div>
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-foreground/3 rounded-full blur-2xl -z-10"></div>
               
               <div className="relative">
                 <div className="flex items-start gap-4">
                   <div className="p-3 rounded-lg bg-foreground/10">
-                    <Sparkles className="h-6 w-6 text-foreground" />
+                    <User className="h-6 w-6 text-foreground" />
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-2xl font-bold mb-2">Setup Your Agency Profile</h2>
+                    <h2 className="text-2xl font-bold mb-2">Setup Your KOL Profile</h2>
                     <p className="text-sm text-foreground/70 mb-4">
-                      Your account will be verified soon. In the meantime, complete and setup your agency profile to get verified.
+                      Your account will be verified soon. In the meantime, complete and setup your KOL profile to get verified.
                     </p>
                     <Button
                       onClick={() => router.push("/dashboard/agency/edit")}
@@ -123,13 +116,12 @@ export default function AgencyDashboardPage() {
                       size="lg"
                     >
                       <Edit className="h-4 w-4" />
-                      Setup Agency Profile
+                      Setup KOL Profile
                     </Button>
                   </div>
                 </div>
               </div>
             </motion.div>
-
           </div>
         </div>
       </div>
@@ -151,10 +143,10 @@ export default function AgencyDashboardPage() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-3xl font-semibold mb-2">
-                  Welcome{agency ? `, ${agency.name}` : ""}
+                  Welcome{kol?.name ? `, ${kol.name}` : ""}
                 </h1>
                 <p className="text-sm text-foreground/60">
-                  Manage your agency profile and track performance.
+                  Manage your KOL profile and track performance.
                 </p>
               </div>
               <Button
@@ -172,7 +164,7 @@ export default function AgencyDashboardPage() {
           </motion.div>
 
           {/* Setup Banner (if profile incomplete) */}
-          {agency && (!agency.description || !agency.website || agency.services?.length === 0) && (
+          {kol && (!kol.description || !kol.twitter_handle) && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -184,20 +176,57 @@ export default function AgencyDashboardPage() {
               
               <div className="relative flex items-start gap-4">
                 <div className="p-3 rounded-lg bg-foreground/10">
-                  <Briefcase className="h-6 w-6 text-foreground" />
+                  <User className="h-6 w-6 text-foreground" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold mb-2">Setup Your Agency Profile</h2>
+                  <h2 className="text-xl font-bold mb-2">Complete Your KOL Profile</h2>
                   <p className="text-sm text-foreground/70 mb-4">
-                    Complete your agency profile to increase visibility and attract more clients. Add your services, portfolio, and pricing.
+                    Add your Twitter handle, follower count, content types, and pricing to increase visibility and attract more clients.
                   </p>
                   <Link href="/dashboard/agency/edit">
                     <Button className="cursor-pointer gap-2">
                       <Edit className="h-4 w-4" />
-                      Setup Agency Profile
+                      Setup KOL Profile
                     </Button>
                   </Link>
                 </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Social Stats Card */}
+          {kol && kol.twitter_handle && (
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="mb-8 p-6 rounded-xl border border-border bg-card"
+            >
+              <h3 className="text-lg font-semibold mb-4">Social Media Stats</h3>
+              <div className="grid sm:grid-cols-3 gap-4">
+                <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Twitter className="h-4 w-4 text-foreground/60" />
+                    <span className="text-sm text-foreground/60">Twitter</span>
+                  </div>
+                  <p className="text-lg font-semibold">@{kol.twitter_handle}</p>
+                </div>
+                {kol.twitter_followers && (
+                  <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                    <div className="text-sm text-foreground/60 mb-2">Followers</div>
+                    <p className="text-lg font-semibold">
+                      {kol.twitter_followers.toLocaleString()}
+                    </p>
+                  </div>
+                )}
+                {kol.engagement_rate && (
+                  <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                    <div className="text-sm text-foreground/60 mb-2">Engagement Rate</div>
+                    <p className="text-lg font-semibold">
+                      {parseFloat(kol.engagement_rate.toString()).toFixed(1)}%
+                    </p>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -264,7 +293,7 @@ export default function AgencyDashboardPage() {
                 {stats.rating > 0 ? stats.rating.toFixed(1) : "-"}
               </div>
               <p className="text-xs text-foreground/50 mt-1">
-                {agency?.reviews ? `${agency.reviews} reviews` : "No reviews yet"}
+                {kol?.reviews ? `${kol.reviews} reviews` : "No reviews yet"}
               </p>
             </motion.div>
           </div>
@@ -292,22 +321,22 @@ export default function AgencyDashboardPage() {
                   </Button>
                 </Link>
               </div>
-              {agency && (
+              {kol && (
                 <div className="flex items-center gap-2">
-                  <Link href={`/agencies/${agency.id}`} className="flex-1">
+                  <Link href={`/agencies/${kol.id}`} className="flex-1">
                     <Button variant="outline" className="w-full justify-start gap-2 cursor-pointer">
                       <Eye className="h-4 w-4" />
                       View Profile
                     </Button>
                   </Link>
-                  <FavoriteButton agencyId={agency.id} />
+                  <FavoriteButton agencyId={kol.id} />
                 </div>
               )}
             </div>
           </motion.div>
 
           {/* Delete Account Section */}
-          {agency && (
+          {kol && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -322,7 +351,7 @@ export default function AgencyDashboardPage() {
                   <div>
                     <h3 className="text-lg font-semibold mb-2 text-red-500">Danger Zone</h3>
                     <p className="text-sm text-foreground/70">
-                      Once you delete your account, there is no going back. This will permanently delete your agency profile, messages, and all associated data.
+                      Once you delete your account, there is no going back. This will permanently delete your KOL profile, messages, and all associated data.
                     </p>
                   </div>
                   <Button
@@ -361,7 +390,7 @@ export default function AgencyDashboardPage() {
                       Are you sure you want to delete your account? This action cannot be undone.
                     </p>
                     <p className="text-sm text-foreground/70 mb-4">
-                      This will permanently delete your agency profile, messages, and all associated data.
+                      This will permanently delete your KOL profile, messages, and all associated data.
                     </p>
                     <div className="mb-4">
                       <label className="text-sm font-medium text-foreground/80 mb-2 block">

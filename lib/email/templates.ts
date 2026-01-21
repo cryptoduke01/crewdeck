@@ -206,3 +206,84 @@ This email was sent from crewdeck
   
   return { subject, html, text };
 }
+
+export function verificationEmail(profileName: string, profileType: "agency" | "kol", profileUrl: string): EmailTemplate {
+  const subject = `🎉 Congratulations! Your ${profileType === "kol" ? "KOL" : "Agency"} profile has been verified on crewdeck`;
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #fafafa;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <img src="${LOGO_URL}" alt="crewdeck" style="height: 40px; margin-bottom: 10px;" />
+        </div>
+        <div style="background: #fff; border-radius: 8px; padding: 30px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+          <h1 style="margin: 0 0 10px 0; font-size: 24px; color: #000;">🎉 Congratulations!</h1>
+          <p style="margin: 0; color: #666; font-size: 14px;">Your profile has been verified</p>
+        </div>
+        
+        <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; margin-bottom: 20px;">
+          <p style="margin: 0 0 16px 0; font-size: 16px;">
+            Hi <strong>${profileName}</strong>,
+          </p>
+          
+          <p style="margin: 0 0 16px 0; font-size: 16px;">
+            Great news! Your ${profileType === "kol" ? "KOL" : "agency"} profile has been verified and is now live on crewdeck. You're all set to start connecting with Web3 projects and growing your business.
+          </p>
+          
+          <div style="background: #f0fdf4; border-left: 3px solid #22c55e; padding: 16px; margin: 20px 0; border-radius: 4px;">
+            <p style="margin: 0; font-size: 14px; color: #166534;">
+              <strong>✓ Verified Status:</strong> Your profile now displays a verification badge, building trust with potential clients.
+            </p>
+          </div>
+          
+          <p style="margin: 0 0 16px 0; font-size: 16px;">
+            What's next?
+          </p>
+          
+          <ul style="margin: 0 0 20px 0; padding-left: 20px;">
+            <li style="margin-bottom: 8px;">Your profile is now visible to all visitors</li>
+            <li style="margin-bottom: 8px;">Start receiving inquiries from potential clients</li>
+            <li style="margin-bottom: 8px;">Build your reputation with reviews and portfolio items</li>
+            <li>Connect with Web3 projects looking for marketing talent</li>
+          </ul>
+          
+          <a href="${profileUrl}" style="display: inline-block; background: #000; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500; margin-top: 16px;">
+            View Your Profile
+          </a>
+        </div>
+        
+        <p style="color: #666; font-size: 12px; margin-top: 30px; text-align: center;">
+          This email was sent from <a href="${WEBSITE_URL}" style="color: #000;">crewdeck</a>
+        </p>
+      </body>
+    </html>
+  `;
+  
+  const text = `
+🎉 Congratulations! Your profile has been verified on crewdeck
+
+Hi ${profileName},
+
+Great news! Your ${profileType === "kol" ? "KOL" : "agency"} profile has been verified and is now live on crewdeck. You're all set to start connecting with Web3 projects and growing your business.
+
+✓ Verified Status: Your profile now displays a verification badge, building trust with potential clients.
+
+What's next?
+- Your profile is now visible to all visitors
+- Start receiving inquiries from potential clients
+- Build your reputation with reviews and portfolio items
+- Connect with Web3 projects looking for marketing talent
+
+View your profile: ${profileUrl}
+
+---
+This email was sent from crewdeck
+  `.trim();
+  
+  return { subject, html, text };
+}

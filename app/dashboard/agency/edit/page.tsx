@@ -14,6 +14,7 @@ import { useToast } from "@/lib/toast/context";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { PortfolioManager } from "@/components/portfolio-manager";
 import { analytics } from "@/lib/analytics/client";
+import { ImageUpload } from "@/components/image-upload";
 
 const niches = ["DeFi", "NFT", "Web3", "Gaming", "Metaverse"];
 
@@ -34,6 +35,7 @@ export default function EditProfilePage() {
     teamSize: "",
     priceRangeMin: "",
     priceRangeMax: "",
+    logo_url: "",
     // KOL-specific fields
     twitterHandle: "",
     twitterFollowers: "",
@@ -81,6 +83,7 @@ export default function EditProfilePage() {
         pricePerVideo: (agency as any).price_per_video?.toString() || "",
         pricePerSpace: (agency as any).price_per_space?.toString() || "",
         solanaWallet: (agency as any).solana_wallet || "",
+        logo_url: (agency as any).logo_url || (agency as any).profile_picture || "",
       });
       setServices(agency.services || []);
       
@@ -127,6 +130,15 @@ export default function EditProfilePage() {
         teamSize: "",
         priceRangeMin: "",
         priceRangeMax: "",
+        logo_url: "",
+        twitterHandle: "",
+        twitterFollowers: "",
+        engagementRate: "",
+        contentTypes: [],
+        pricePerThread: "",
+        pricePerVideo: "",
+        pricePerSpace: "",
+        solanaWallet: "",
       });
     }
   }, [agency, agencyLoading, user]);
@@ -207,6 +219,11 @@ export default function EditProfilePage() {
 
         // Add Solana wallet for both types
         insertData.solana_wallet = formData.solanaWallet || null;
+        
+        // Add logo/profile picture if uploaded
+        if (formData.logo_url) {
+          insertData.logo_url = formData.logo_url;
+        }
 
         const { data: newProfile, error: createError } = await supabase
           .from("profiles")
@@ -228,10 +245,10 @@ export default function EditProfilePage() {
           throw createError;
         }
 
-        // Update services for new agency
-        if (services.length > 0 && newAgency) {
+        // Update services for new profile
+        if (services.length > 0 && newProfile) {
           const servicesToInsert = services.map((service) => ({
-            profile_id: newAgency.id,
+            profile_id: newProfile.id,
             name: service,
           }));
 
@@ -242,14 +259,15 @@ export default function EditProfilePage() {
           if (insertError) throw insertError;
         }
 
-        // Save portfolio items for new agency
-        if (newAgency && portfolioItems.length > 0) {
-          await savePortfolioItems(newAgency.id);
+        // Save portfolio items for new profile
+        if (newProfile && portfolioItems.length > 0) {
+          await savePortfolioItems(newProfile.id);
         }
 
-        analytics.track("Agency Profile Created", {
-          agencyId: newAgency.id,
-          agencyName: formData.name,
+        analytics.track("Profile Created", {
+          profileId: newProfile.id,
+          profileName: formData.name,
+          profileType: profileType,
           niche: formData.niche,
         });
 
@@ -264,25 +282,49 @@ export default function EditProfilePage() {
         return;
       }
 
-      // Update existing agency
+      // Update existing profile
       if (agency) {
-        const { error: agencyError } = await supabase
-          .from("agencies")
-          .update({
-            name: formData.name,
-            description: formData.description || null,
-            niche: formData.niche,
-            location: formData.location || null,
-            website: formData.website || null,
-            email: formData.email || null,
-            founded: formData.founded ? parseInt(formData.founded) : null,
-            team_size: formData.teamSize || null,
-            price_range_min: priceMin,
-            price_range_max: priceMax,
-          })
+        const profileType = (agency as any)?.profile_type || "agency";
+        const updateData: any = {
+          name: formData.name,
+          description: formData.description || null,
+          niche: formData.niche,
+          location: formData.location || null,
+          website: formData.website || null,
+          email: formData.email || null,
+          solana_wallet: formData.solanaWallet || null,
+        };
+
+        // Add logo_url if uploaded
+        if (formData.logo_url) {
+          updateData.logo_url = formData.logo_url;
+        }
+
+        // Agency-specific fields
+        if (profileType !== "kol") {
+          updateData.founded = formData.founded ? parseInt(formData.founded) : null;
+          updateData.team_size = formData.teamSize || null;
+          updateData.price_range_min = priceMin;
+          updateData.price_range_max = priceMax;
+        }
+
+        // KOL-specific fields
+        if (profileType === "kol") {
+          updateData.twitter_handle = formData.twitterHandle || null;
+          updateData.twitter_followers = formData.twitterFollowers ? parseInt(formData.twitterFollowers) : null;
+          updateData.engagement_rate = formData.engagementRate ? parseFloat(formData.engagementRate) : null;
+          updateData.content_types = formData.contentTypes || [];
+          updateData.price_per_thread = formData.pricePerThread ? parseInt(formData.pricePerThread) : null;
+          updateData.price_per_video = formData.pricePerVideo ? parseInt(formData.pricePerVideo) : null;
+          updateData.price_per_space = formData.pricePerSpace ? parseInt(formData.pricePerSpace) : null;
+        }
+
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update(updateData)
           .eq("id", agency.id);
 
-        if (agencyError) throw agencyError;
+        if (profileError) throw profileError;
 
         // Update services (delete all, then insert new ones)
         const { error: deleteError } = await supabase
@@ -438,9 +480,25 @@ export default function EditProfilePage() {
             <div className="p-6 rounded-lg border border-border bg-card space-y-4">
               <h2 className="text-lg font-semibold mb-4">Basic information</h2>
 
+              {/* Profile Picture Upload */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground/80">
+                  {(agency as any)?.profile_type === "kol" ? "Profile Picture" : "Logo"}
+                </label>
+                <ImageUpload
+                  agencyId={agency?.id || "new"}
+                  onUploadComplete={(url) => {
+                    // Store in formData or state - we'll save it with the profile
+                    setFormData({ ...formData, logo_url: url });
+                  }}
+                  currentImageUrl={(agency as any)?.logo_url || (agency as any)?.profile_picture}
+                  folder="profiles"
+                />
+              </div>
+
               <div className="space-y-2">
                 <label htmlFor="name" className="text-sm font-medium text-foreground/80">
-                  Agency name *
+                  {(agency as any)?.profile_type === "kol" ? "Display Name *" : "Agency name *"}
                 </label>
                 <input
                   id="name"
@@ -449,7 +507,7 @@ export default function EditProfilePage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full h-11 px-4 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
-                  placeholder="Your Agency Name"
+                  placeholder={(agency as any)?.profile_type === "kol" ? "Your Display Name" : "Your Agency Name"}
                 />
               </div>
 

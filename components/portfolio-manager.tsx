@@ -57,7 +57,7 @@ export function PortfolioManager({ agencyId, initialItems = [], onSave }: Portfo
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Portfolio items</h3>
+        <h3 className="text-lg font-semibold">Proof of Work</h3>
         <Button
           type="button"
           variant="outline"

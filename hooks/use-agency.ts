@@ -24,6 +24,7 @@ export interface Profile {
   team_size?: number;
   solana_wallet?: string;
   wallet_verified?: boolean;
+  logo_url?: string;
   // KOL-specific fields
   twitter_handle?: string;
   twitter_followers?: number;
@@ -199,6 +200,7 @@ export function useAgency(id: string) {
             team_size: profileData.team_size,
             solana_wallet: profileData.solana_wallet,
             wallet_verified: profileData.wallet_verified || false,
+            logo_url: profileData.logo_url,
             // KOL-specific fields
             twitter_handle: profileData.twitter_handle,
             twitter_followers: profileData.twitter_followers,

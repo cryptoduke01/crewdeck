@@ -11,7 +11,7 @@ interface FavoriteButtonProps {
   size?: "default" | "sm" | "lg";
 }
 
-export function FavoriteButton({ agencyId, variant = "ghost", size = "default" }: FavoriteButtonProps) {
+export function FavoriteButton({ agencyId, variant = "outline", size = "default" }: FavoriteButtonProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
 
   return (
@@ -23,7 +23,7 @@ export function FavoriteButton({ agencyId, variant = "ghost", size = "default" }
         e.stopPropagation();
         toggleFavorite(agencyId);
       }}
-      className="cursor-pointer"
+      className="cursor-pointer group-hover:bg-foreground group-hover:text-background hover:outline hover:outline-2 hover:outline-foreground/20 transition-all"
       title={isFavorite(agencyId) ? "Remove bookmark" : "Bookmark agency"}
     >
       <motion.div

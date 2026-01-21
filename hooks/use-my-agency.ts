@@ -58,14 +58,27 @@ export function useMyAgency() {
           console.log("No profile found for user:", user.id);
         }
 
-        if (profileData) {
-          // Fetch services
-          const { data: servicesData } = await supabase
-            .from("services")
-            .select("name")
-            .eq("profile_id", profileData.id);
+      if (profileData) {
+        // Fetch services (only for agencies, KOLs don't have services)
+        let services: string[] = [];
+        if (profileData.profile_type !== "kol") {
+          try {
+            const { data: servicesData, error: servicesError } = await supabase
+              .from("services")
+              .select("name")
+              .eq("profile_id", profileData.id);
 
-          const services = servicesData?.map((s: any) => s.name) || [];
+            if (servicesError) {
+              // If column doesn't exist yet, services will be empty
+              console.warn("Error fetching services (may need migration):", servicesError);
+            } else {
+              services = servicesData?.map((s: any) => s.name) || [];
+            }
+          } catch (err) {
+            // Silently fail - services table might not be migrated yet
+            console.warn("Services query failed (may need migration):", err);
+          }
+        }
 
           const transformedProfile: Agency = {
             id: profileData.id,
@@ -145,12 +158,26 @@ export function useMyAgency() {
       }
 
       if (profileData) {
-        const { data: servicesData } = await supabase
-          .from("services")
-          .select("name")
-          .eq("profile_id", profileData.id);
+        // Fetch services (only for agencies, KOLs don't have services)
+        let services: string[] = [];
+        if (profileData.profile_type !== "kol") {
+          try {
+            const { data: servicesData, error: servicesError } = await supabase
+              .from("services")
+              .select("name")
+              .eq("profile_id", profileData.id);
 
-        const services = servicesData?.map((s: any) => s.name) || [];
+            if (servicesError) {
+              // If column doesn't exist yet, services will be empty
+              console.warn("Error fetching services (may need migration):", servicesError);
+            } else {
+              services = servicesData?.map((s: any) => s.name) || [];
+            }
+          } catch (err) {
+            // Silently fail - services table might not be migrated yet
+            console.warn("Services query failed (may need migration):", err);
+          }
+        }
 
         const transformedProfile: Agency = {
           id: profileData.id,

@@ -6,6 +6,7 @@ import {
   Star, 
   MapPin, 
   CheckCircle2,
+  XCircle,
   Mail,
   Globe,
   Calendar,
@@ -51,7 +52,7 @@ export default function AgencyProfilePage() {
             <Link href="/agencies" className="cursor-pointer">
               <Button variant="ghost" className="gap-2 cursor-pointer mb-8">
                 <ArrowLeft className="h-4 w-4" />
-                Back to Agencies
+                Back to Profiles
               </Button>
             </Link>
             <div className="text-center py-20">
@@ -83,7 +84,7 @@ export default function AgencyProfilePage() {
             <Link href="/agencies" className="cursor-pointer">
               <Button variant="ghost" className="gap-2 cursor-pointer">
                 <ArrowLeft className="h-4 w-4" />
-                Back to Agencies
+                Back to Profiles
               </Button>
             </Link>
           </motion.div>
@@ -96,11 +97,37 @@ export default function AgencyProfilePage() {
             className="mb-12"
           >
             <div className="mb-6">
-              <div className="flex items-center gap-3 mb-3">
-                <h1 className="text-3xl sm:text-4xl font-semibold">{agency.name}</h1>
-                {agency.verified && (
-                  <CheckCircle2 className="h-5 w-5 text-foreground/40" />
-                )}
+              <div className="flex items-center gap-4 mb-3">
+                {/* Profile Image or Initial */}
+                <div className="relative shrink-0">
+                  {agency.logo_url ? (
+                    <img
+                      src={agency.logo_url}
+                      alt={agency.name}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-border"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-foreground/10 border-2 border-border flex items-center justify-center">
+                      <span className="text-2xl font-semibold text-foreground">
+                        {agency.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  {agency.verified ? (
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-background border-2 border-background flex items-center justify-center">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    </div>
+                  ) : (
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-background border-2 border-background flex items-center justify-center">
+                      <XCircle className="h-4 w-4 text-yellow-500" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-3xl sm:text-4xl font-semibold">{agency.name}</h1>
+                  </div>
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-4 mb-4">
                 <div className="flex items-center gap-1.5">
@@ -316,7 +343,7 @@ export default function AgencyProfilePage() {
             </motion.section>
           )}
 
-          {/* Portfolio Section */}
+          {/* Proof of Work Section */}
           {agency.portfolio && Array.isArray(agency.portfolio) && agency.portfolio.length > 0 ? (
             <motion.section
               initial={{ opacity: 0, y: 20 }}
@@ -325,7 +352,7 @@ export default function AgencyProfilePage() {
               transition={{ duration: 0.5 }}
               className="mb-16"
             >
-              <h2 className="text-2xl font-semibold mb-6">Portfolio & Case Studies</h2>
+              <h2 className="text-2xl font-semibold mb-6">Proof of Work</h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {agency.portfolio.map((project, index) => (
                   <motion.div

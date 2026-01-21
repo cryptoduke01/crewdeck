@@ -98,7 +98,7 @@ export function Navbar() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -10, scale: 0.95 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute right-0 top-full mt-2 w-72 rounded-lg border border-border bg-card shadow-xl z-50 overflow-hidden"
+                          className="absolute right-0 top-full mt-2 w-64 rounded-lg border border-border bg-card shadow-xl z-50 overflow-hidden"
                         >
                           <div className="p-2 space-y-1">
                             <div className="px-3 py-2 text-xs text-foreground/60 border-b border-border mb-1">
@@ -112,7 +112,7 @@ export function Navbar() {
                               </div>
                             </Link>
                             <div className="px-3 py-2 text-sm text-foreground/70 flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-2 min-w-0">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
                                 <Bookmark className="h-4 w-4 flex-shrink-0" />
                                 <span className="truncate">Bookmarked</span>
                               </div>
@@ -125,7 +125,7 @@ export function Navbar() {
                                 await signOut();
                                 setDashboardDropdownOpen(false);
                               }}
-                              className="w-full px-3 py-2 text-sm text-foreground/70 hover:bg-muted rounded-md cursor-pointer transition-colors flex items-center gap-2"
+                              className="w-full px-3 py-2 text-sm text-foreground/70 hover:bg-muted rounded-md cursor-pointer transition-colors flex items-center gap-2 mt-1"
                             >
                               <LogOut className="h-4 w-4 flex-shrink-0" />
                               <span>Sign out</span>

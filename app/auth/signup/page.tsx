@@ -71,15 +71,8 @@ export default function SignupPage() {
       showError(errorTitle, errorMessage);
       setLoading(false);
     } else {
-      showSuccess(
-        "Account created!", 
-        `Welcome, ${profileName}! Redirecting to dashboard...`,
-        2000
-      );
-      // Redirect to dashboard after showing message
-      setTimeout(() => {
-        router.push("/dashboard/agency");
-      }, 2000);
+      // Redirect to success page
+      router.push(`/auth/signup/success?name=${encodeURIComponent(profileName)}&type=${profileType}`);
     }
   };
 

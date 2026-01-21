@@ -102,7 +102,7 @@ export function ImageUpload({ agencyId, onUploadComplete, currentImageUrl, folde
     <div className="space-y-3">
       {preview ? (
         <div className="relative group">
-          <div className="relative w-full h-48 rounded-lg border border-border bg-muted overflow-hidden">
+          <div className="relative w-32 h-32 rounded-xl border border-border bg-muted overflow-hidden">
             <img
               src={preview}
               alt="Preview"
@@ -111,13 +111,13 @@ export function ImageUpload({ agencyId, onUploadComplete, currentImageUrl, folde
             <button
               type="button"
               onClick={handleRemove}
-              className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 backdrop-blur-sm border border-border hover:bg-background transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+              className="absolute top-2 right-2 p-1.5 rounded-full bg-background/90 backdrop-blur-sm border border-border hover:bg-background transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
           {uploading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-lg">
+            <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-xl">
               <LoadingSpinner size="lg" />
             </div>
           )}
@@ -125,19 +125,19 @@ export function ImageUpload({ agencyId, onUploadComplete, currentImageUrl, folde
       ) : (
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="relative w-full h-48 rounded-lg border-2 border-dashed border-border bg-muted hover:border-foreground/40 transition-colors cursor-pointer flex flex-col items-center justify-center gap-3"
+          className="relative w-32 h-32 rounded-xl border-2 border-dashed border-border bg-muted hover:border-foreground/40 transition-colors cursor-pointer flex flex-col items-center justify-center gap-2"
         >
           {uploading ? (
             <>
               <LoadingSpinner size="lg" />
-              <p className="text-sm text-foreground/60">Uploading...</p>
+              <p className="text-xs text-foreground/60">Uploading...</p>
             </>
           ) : (
             <>
-              <ImageIcon className="h-8 w-8 text-foreground/40" />
-              <div className="text-center">
-                <p className="text-sm font-medium text-foreground/70">Click to upload</p>
-                <p className="text-xs text-foreground/50 mt-1">PNG, JPG up to 5MB</p>
+              <ImageIcon className="h-6 w-6 text-foreground/40" />
+              <div className="text-center px-2">
+                <p className="text-xs font-medium text-foreground/70">Click to upload</p>
+                <p className="text-[10px] text-foreground/50 mt-0.5">PNG, JPG</p>
               </div>
             </>
           )}
@@ -152,18 +152,6 @@ export function ImageUpload({ agencyId, onUploadComplete, currentImageUrl, folde
         className="hidden"
         disabled={uploading}
       />
-
-      {!preview && !uploading && (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => fileInputRef.current?.click()}
-          className="w-full gap-2 cursor-pointer"
-        >
-          <Upload className="h-4 w-4" />
-          Choose image
-        </Button>
-      )}
     </div>
   );
 }

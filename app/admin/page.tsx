@@ -24,6 +24,7 @@ import { createSupabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/lib/toast/context";
 import { exportToCSV } from "@/lib/export";
 import { Download } from "lucide-react";
+import { sendVerificationEmail } from "@/lib/email/utils";
 
 // Disable static generation for this page
 export const dynamic = 'force-dynamic';
@@ -32,12 +33,14 @@ interface Agency {
   id: string;
   name: string;
   slug: string;
+  email?: string;
   verified: boolean;
   featured?: boolean;
   rating: number;
-  reviews: number;
+  reviews: number; // Calculated from reviews table
   created_at: string;
   user_id: string;
+  profile_type?: "agency" | "kol";
 }
 
 interface Stats {
@@ -67,6 +70,13 @@ export default function AdminPage() {
   const [filterVerified, setFilterVerified] = useState<"all" | "verified" | "pending">("all");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{
+    type: "verify" | "unverify" | "delete";
+    agencyId: string;
+    agencyName: string;
+    verified?: boolean;
+  } | null>(null);
 
   useEffect(() => {
     // Check if authenticated via passcode
@@ -90,10 +100,35 @@ export default function AdminPage() {
       // Fetch agencies
       const { data: agenciesData, error: agenciesError } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id, name, slug, email, verified, created_at, user_id, profile_type")
         .order("created_at", { ascending: false });
 
-      if (agenciesError) throw agenciesError;
+      if (agenciesError) {
+        console.error("Error fetching profiles:", agenciesError);
+        throw agenciesError;
+      }
+
+      // Calculate rating and reviews for each profile
+      const profilesWithStats = await Promise.all(
+        (agenciesData || []).map(async (profile) => {
+          // Get reviews count and average rating
+          const { data: reviewsData } = await supabase
+            .from("reviews")
+            .select("rating")
+            .eq("profile_id", profile.id);
+
+          const reviews = reviewsData?.length || 0;
+          const rating = reviews > 0
+            ? reviewsData!.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews
+            : 0;
+
+          return {
+            ...profile,
+            rating,
+            reviews,
+          };
+        })
+      );
 
       // Fetch stats
       const { count: totalAgencies } = await supabase
@@ -113,7 +148,7 @@ export default function AdminPage() {
         .from("reviews")
         .select("*", { count: "exact", head: true });
 
-      setAgencies(agenciesData || []);
+      setAgencies(profilesWithStats || []);
       setStats({
         totalAgencies: totalAgencies || 0,
         verifiedAgencies: verifiedAgencies || 0,
@@ -132,6 +167,8 @@ export default function AdminPage() {
   const handleVerify = async (agencyId: string, verified: boolean) => {
     try {
       const supabase = createSupabaseClient();
+      const agency = agencies.find((a) => a.id === agencyId);
+      
       const { error } = await supabase
         .from("profiles")
         .update({ verified })
@@ -152,9 +189,29 @@ export default function AdminPage() {
           : prev.pendingAgencies + 1,
       }));
 
+      // Send verification email if verified
+      if (verified && agency && agency.email) {
+        try {
+          const profileType = (agency.profile_type || "agency") as "agency" | "kol";
+          const profileUrl = typeof window !== "undefined" 
+            ? `${window.location.origin}/agencies/${agencyId}`
+            : `${process.env.NEXT_PUBLIC_APP_URL || "https://crewdeck.xyz"}/agencies/${agencyId}`;
+          
+          await sendVerificationEmail(
+            agency.email,
+            agency.name,
+            profileType,
+            profileUrl
+          );
+        } catch (emailError) {
+          console.error("Failed to send verification email:", emailError);
+          // Don't fail the verification if email fails
+        }
+      }
+
       showSuccess(
-        verified ? "Agency verified" : "Agency unverified",
-        `The agency has been ${verified ? "verified" : "unverified"}.`
+        verified ? "Profile verified" : "Profile unverified",
+        `The ${agency?.profile_type === "kol" ? "KOL" : "agency"} has been ${verified ? "verified" : "unverified"}.${verified && agency?.email ? " A congratulatory email has been sent." : ""}`
       );
     } catch (err) {
       showError("Failed to update", err instanceof Error ? err.message : "Unknown error");
@@ -164,9 +221,8 @@ export default function AdminPage() {
   // Removed featured and premium toggles - monetization removed
 
   const handleDelete = async (agencyId: string, agencyName: string) => {
-    if (!confirm(`Are you sure you want to delete "${agencyName}"? This action cannot be undone.`)) {
-      return;
-    }
+    setConfirmModalOpen(false);
+    setConfirmAction(null);
 
     try {
       const supabase = createSupabaseClient();
@@ -234,7 +290,7 @@ export default function AdminPage() {
                   Admin Panel
                 </h1>
                 <p className="text-sm text-foreground/60">
-                  Manage agencies, verify accounts, and moderate content.
+                  Manage profiles (Agencies & KOLs), verify accounts, and moderate content.
                 </p>
               </div>
               <div className="flex gap-3">
@@ -340,7 +396,7 @@ export default function AdminPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-foreground/40" />
                 <input
                   type="text"
-                  placeholder="Search agencies..."
+                  placeholder="Search profiles..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full h-10 pl-10 pr-4 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
@@ -456,7 +512,15 @@ export default function AdminPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleVerify(agency.id, !agency.verified)}
+                            onClick={() => {
+                              setConfirmAction({
+                                type: agency.verified ? "unverify" : "verify",
+                                agencyId: agency.id,
+                                agencyName: agency.name,
+                                verified: !agency.verified,
+                              });
+                              setConfirmModalOpen(true);
+                            }}
                             className="cursor-pointer"
                           >
                             {agency.verified ? (
@@ -468,7 +532,14 @@ export default function AdminPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDelete(agency.id, agency.name)}
+                            onClick={() => {
+                              setConfirmAction({
+                                type: "delete",
+                                agencyId: agency.id,
+                                agencyName: agency.name,
+                              });
+                              setConfirmModalOpen(true);
+                            }}
                             className="text-foreground/50 hover:text-destructive cursor-pointer"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -483,17 +554,108 @@ export default function AdminPage() {
             {filteredAgencies.length === 0 && (
               <div className="text-center py-12">
                 <Building2 className="h-12 w-12 text-foreground/20 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No agencies found</h3>
+                <h3 className="text-lg font-semibold mb-2">No profiles found</h3>
                 <p className="text-sm text-foreground/60">
                   {searchQuery || filterVerified !== "all"
                     ? "Try adjusting your search or filters."
-                    : "No agencies available."}
+                    : "No profiles available."}
                 </p>
               </div>
             )}
           </motion.div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmModalOpen && confirmAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm" onClick={() => {
+          setConfirmModalOpen(false);
+          setConfirmAction(null);
+        }}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-card border border-border rounded-xl p-6 max-w-md w-full mx-4 shadow-xl"
+          >
+            <div className="flex items-start gap-4 mb-6">
+              <div className={`p-2 rounded-lg shrink-0 ${
+                confirmAction.type === "delete" 
+                  ? "bg-red-500/20" 
+                  : confirmAction.type === "verify"
+                  ? "bg-green-500/20"
+                  : "bg-yellow-500/20"
+              }`}>
+                {confirmAction.type === "delete" ? (
+                  <Trash2 className="h-6 w-6 text-red-500" />
+                ) : confirmAction.type === "verify" ? (
+                  <CheckCircle2 className="h-6 w-6 text-green-500" />
+                ) : (
+                  <XCircle className="h-6 w-6 text-yellow-500" />
+                )}
+              </div>
+              <div className="flex-1">
+                <h3 className={`text-xl font-semibold mb-2 ${
+                  confirmAction.type === "delete" 
+                    ? "text-red-500" 
+                    : confirmAction.type === "verify"
+                    ? "text-green-500"
+                    : "text-yellow-500"
+                }`}>
+                  {confirmAction.type === "delete" 
+                    ? "Delete Profile" 
+                    : confirmAction.type === "verify"
+                    ? "Verify Profile"
+                    : "Unverify Profile"}
+                </h3>
+                <p className="text-sm text-foreground/70 mb-4">
+                  {confirmAction.type === "delete" 
+                    ? `Are you sure you want to delete "${confirmAction.agencyName}"? This action cannot be undone and will permanently delete the profile, messages, and all associated data.`
+                    : confirmAction.type === "verify"
+                    ? `Are you sure you want to verify "${confirmAction.agencyName}"? This will make their profile visible to all users and send them a congratulatory email.`
+                    : `Are you sure you want to unverify "${confirmAction.agencyName}"? This will hide their profile from public view.`}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setConfirmModalOpen(false);
+                  setConfirmAction(null);
+                }}
+                className="cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  if (confirmAction.type === "delete") {
+                    await handleDelete(confirmAction.agencyId, confirmAction.agencyName);
+                  } else {
+                    await handleVerify(confirmAction.agencyId, confirmAction.verified!);
+                  }
+                }}
+                className={`cursor-pointer ${
+                  confirmAction.type === "delete"
+                    ? "border-red-500/30 text-red-500 hover:bg-red-500/10"
+                    : confirmAction.type === "verify"
+                    ? "border-green-500/30 text-green-500 hover:bg-green-500/10"
+                    : "border-yellow-500/30 text-yellow-500 hover:bg-yellow-500/10"
+                }`}
+              >
+                {confirmAction.type === "delete" 
+                  ? "Delete Profile" 
+                  : confirmAction.type === "verify"
+                  ? "Verify Profile"
+                  : "Unverify Profile"}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

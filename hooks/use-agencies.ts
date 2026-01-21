@@ -30,6 +30,7 @@ export interface Profile {
   price_per_space?: number;
   wallet_verified?: boolean;
   solana_wallet?: string;
+  logo_url?: string;
 }
 
 // Keep Agency as alias for backward compatibility during migration

@@ -1,4 +1,4 @@
-import { newMessageEmail, newReviewEmail, welcomeEmail } from "./templates";
+import { newMessageEmail, newReviewEmail, welcomeEmail, verificationEmail } from "./templates";
 
 export async function sendNewMessageNotification(
   agencyEmail: string,
@@ -156,12 +156,64 @@ export async function sendWelcomeEmail(
           try {
             errorMessage = JSON.stringify(errorData, null, 2);
           } catch {
-            errorMessage = `Email API error: ${response.status} ${response.statusText}`;
+            errorMessage = `Email API error: ${response.status} ${response.statusText || 'Unknown error'}`;
           }
         }
       }
     } catch (parseError) {
       // If JSON parsing fails, use status text
+      errorMessage = `HTTP ${response.status}: ${response.statusText || 'Unknown error'}`;
+    }
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
+
+export async function sendVerificationEmail(
+  profileEmail: string,
+  profileName: string,
+  profileType: "agency" | "kol",
+  profileUrl: string
+) {
+  const template = verificationEmail(profileName, profileType, profileUrl);
+  
+  const response = await fetch("/api/email/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      to: profileEmail,
+      ...template,
+    }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Failed to send email (HTTP ${response.status})`;
+    try {
+      const errorData = await response.json();
+      
+      if (typeof errorData === 'string') {
+        errorMessage = errorData;
+      } else if (errorData && typeof errorData === 'object') {
+        if (errorData.error) {
+          errorMessage = typeof errorData.error === 'string' 
+            ? errorData.error 
+            : JSON.stringify(errorData.error);
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.details) {
+          errorMessage = typeof errorData.details === 'string'
+            ? errorData.details
+            : JSON.stringify(errorData.details);
+        } else {
+          try {
+            errorMessage = JSON.stringify(errorData, null, 2);
+          } catch {
+            errorMessage = `Email API error: ${response.status} ${response.statusText || 'Unknown error'}`;
+          }
+        }
+      }
+    } catch (parseError) {
       errorMessage = `HTTP ${response.status}: ${response.statusText || 'Unknown error'}`;
     }
     throw new Error(errorMessage);

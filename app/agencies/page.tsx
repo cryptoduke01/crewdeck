@@ -8,6 +8,7 @@ import {
   Star, 
   MapPin, 
   CheckCircle2,
+  XCircle,
   ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -424,19 +425,40 @@ export default function AgenciesPage() {
                     )}
                     {/* Header */}
                     <div className="mb-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2 flex-1">
+                      <div className="flex items-start gap-3 mb-2">
+                        {/* Profile Image or Initial */}
+                        <div className="relative shrink-0">
+                          {(agency as any).logo_url ? (
+                            <img
+                              src={(agency as any).logo_url}
+                              alt={agency.name}
+                              className="w-12 h-12 rounded-full object-cover border border-border"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-foreground/10 border border-border flex items-center justify-center">
+                              <span className="text-sm font-semibold text-foreground">
+                                {agency.name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                          {agency.verified ? (
+                            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-background border border-background flex items-center justify-center">
+                              <CheckCircle2 className="h-3 w-3 text-green-500" />
+                            </div>
+                          ) : (
+                            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-background border border-background flex items-center justify-center">
+                              <XCircle className="h-3 w-3 text-yellow-500" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
                           <h3 
-                            className="text-lg font-medium"
+                            className="text-lg font-medium truncate"
                             dangerouslySetInnerHTML={{
                               __html: highlightText(agency.name, searchQuery),
                             }}
                           />
-                          {agency.verified && (
-                            <CheckCircle2 className="h-4 w-4 text-foreground/40 flex-shrink-0" />
-                          )}
                         </div>
-                        <FavoriteButton agencyId={agency.id} />
                       </div>
                       <div className="flex items-center gap-3 text-sm">
                         <div className="flex items-center gap-1">
@@ -492,24 +514,27 @@ export default function AgenciesPage() {
                     </div>
 
                     {/* CTA */}
-                    <Link 
-                      href={`/agencies/${agency.id}`} 
-                      className="cursor-pointer"
-                      onClick={() => {
-                        analytics.track("Agency Profile Viewed", {
-                          agencyId: agency.id,
-                          agencyName: agency.name,
-                        });
-                      }}
-                    >
-                      <Button
-                        variant="outline"
-                        className="w-full group-hover:bg-foreground group-hover:text-background transition-colors cursor-pointer"
+                    <div className="flex items-center gap-2">
+                      <Link 
+                        href={`/agencies/${agency.id}`} 
+                        className="flex-1 cursor-pointer"
+                        onClick={() => {
+                          analytics.track("Agency Profile Viewed", {
+                            agencyId: agency.id,
+                            agencyName: agency.name,
+                          });
+                        }}
                       >
-                        View Profile
-                        <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                      </Button>
-                    </Link>
+                        <Button
+                          variant="outline"
+                          className="w-full group-hover:bg-foreground group-hover:text-background transition-colors cursor-pointer"
+                        >
+                          View Profile
+                          <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                      </Link>
+                      <FavoriteButton agencyId={agency.id} />
+                    </div>
                   </div>
                 </motion.div>
                 ))}
