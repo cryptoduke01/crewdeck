@@ -23,7 +23,7 @@ import { Loading } from "@/components/loading";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/lib/toast/context";
 import { exportToCSV } from "@/lib/export";
-import { Download, Sparkles, Crown } from "lucide-react";
+import { Download } from "lucide-react";
 
 // Disable static generation for this page
 export const dynamic = 'force-dynamic';
@@ -245,7 +245,7 @@ export default function AdminPage() {
                       Name: agency.name,
                       Slug: agency.slug,
                       Status: agency.verified ? "Verified" : "Pending",
-                      Featured: agency.featured ? "Yes" : "No",
+                      Type: (agency as any).profile_type || "agency",
                       Rating: agency.rating.toFixed(1),
                       Reviews: agency.reviews,
                       Created: new Date(agency.created_at).toLocaleDateString(),
@@ -382,7 +382,7 @@ export default function AdminPage() {
                       Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-foreground/60 uppercase tracking-wider">
-                      Plan
+                      Type
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-foreground/60 uppercase tracking-wider">
                       Rating
@@ -427,19 +427,9 @@ export default function AdminPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          {(agency as any).premium ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-foreground/10 text-foreground border border-foreground/20">
-                              <Crown className="h-3 w-3" />
-                              Premium
-                            </span>
-                          ) : agency.featured ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-orange-500/10 text-orange-500 border border-orange-500/20">
-                              <Sparkles className="h-3 w-3" />
-                              Featured
-                            </span>
-                          ) : (
-                            <span className="text-xs text-foreground/40">Free</span>
-                          )}
+                          <span className="text-xs text-foreground/40 capitalize">
+                            {(agency as any).profile_type || "agency"}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -462,24 +452,7 @@ export default function AdminPage() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handlePremiumToggle(agency.id, (agency as any).premium || false)}
-                            className={`gap-1 cursor-pointer ${(agency as any).premium ? "text-foreground hover:text-foreground/80" : "text-foreground/60 hover:text-foreground"}`}
-                            title={(agency as any).premium ? "Remove Premium" : "Make Premium"}
-                          >
-                            <Crown className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleFeaturedToggle(agency.id, agency.featured || false)}
-                            className={`gap-1 cursor-pointer ${agency.featured ? "text-orange-500 hover:text-orange-600" : "text-foreground/60 hover:text-foreground"}`}
-                            title={agency.featured ? "Unfeature" : "Feature"}
-                          >
-                            <Sparkles className="h-3.5 w-3.5" />
-                          </Button>
+                          {/* Premium and Featured toggles removed - monetization disabled */}
                           <Button
                             variant="ghost"
                             size="sm"

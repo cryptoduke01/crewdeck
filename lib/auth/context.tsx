@@ -9,7 +9,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, agencyName: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, profileName: string, profileType: "agency" | "kol") => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -134,48 +134,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       analytics.track("User Signed Up", {
         userId: data.user.id,
         email: data.user.email,
-        agencyName,
+        profileName,
+        profileType,
       });
       analytics.identify(data.user.id, {
         email: data.user.email,
-        agencyName,
+        profileName,
+        profileType,
       });
 
       // Make slug unique by appending user ID suffix
       const uniqueSlug = `${baseSlug}-${data.user.id.substring(0, 8)}`;
 
-      // Try to create agency directly (works if email confirmation is disabled)
+      // Try to create profile directly (works if email confirmation is disabled)
       // The trigger will also try to create it, but we check for duplicates first
-      const { error: agencyError } = await supabase.from("agencies").insert({
-        name: agencyName,
+      const { error: profileError } = await supabase.from("profiles").insert({
+        name: profileName,
         slug: uniqueSlug,
         email: email,
+        profile_type: profileType,
         niche: "Web3",
         verified: false,
         user_id: data.user.id,
       });
 
       // If RLS fails, the trigger will handle it (it also checks for duplicates)
-      if (agencyError) {
-        if (agencyError.message?.includes('row-level security')) {
+      if (profileError) {
+        if (profileError.message?.includes('row-level security')) {
           // Trigger will handle it - don't error
-          console.log("Agency creation will be handled by trigger");
-        } else if (agencyError.message?.includes('duplicate') || agencyError.message?.includes('already exists')) {
-          // Agency already exists (maybe trigger created it)
+          console.log("Profile creation will be handled by trigger");
+        } else if (profileError.message?.includes('duplicate') || profileError.message?.includes('already exists')) {
+          // Profile already exists (maybe trigger created it)
           // Check again to confirm
-          const { data: checkAgency } = await supabase
-            .from("agencies")
+          const { data: checkProfile } = await supabase
+            .from("profiles")
             .select("id")
             .eq("user_id", data.user.id)
             .maybeSingle();
           
-          if (!checkAgency) {
+          if (!checkProfile) {
             // Still doesn't exist, might be slug conflict
             const timestampSlug = `${baseSlug}-${Date.now().toString().slice(-6)}`;
-            const { error: timestampError } = await supabase.from("agencies").insert({
-              name: agencyName,
+            const { error: timestampError } = await supabase.from("profiles").insert({
+              name: profileName,
               slug: timestampSlug,
               email: email,
+              profile_type: profileType,
               niche: "Web3",
               verified: false,
               user_id: data.user.id,
@@ -185,10 +189,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               return { error: timestampError };
             }
           }
-          // If checkAgency exists, trigger already created it - that's fine
+          // If checkProfile exists, trigger already created it - that's fine
         } else {
           // Other error - return it
-          return { error: agencyError };
+          return { error: profileError };
         }
       }
 
@@ -199,7 +203,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Use dynamic import to make this non-blocking
         import("@/lib/email/utils").then(({ sendWelcomeEmail }) => {
-          sendWelcomeEmail(email, agencyName, dashboardUrl).catch((err) => {
+          sendWelcomeEmail(email, profileName, dashboardUrl).catch((err) => {
             console.error("Failed to send welcome email:", err);
             // Don't block signup if email fails
           });

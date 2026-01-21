@@ -305,7 +305,7 @@ export default function AgencyProfilePage() {
                     <Wallet className="h-4 w-4 text-foreground/60" />
                     <span className="text-sm font-medium text-foreground/80">Solana Wallet</span>
                     {(agency as any).wallet_verified && (
-                      <CheckCircle2 className="h-4 w-4 text-foreground/40" title="Verified" />
+                      <CheckCircle2 className="h-4 w-4 text-foreground/40" />
                     )}
                   </div>
                   <p className="text-xs font-mono text-foreground/60 break-all">

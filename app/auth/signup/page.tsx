@@ -113,16 +113,16 @@ export default function SignupPage() {
               Sign up to create and manage your profile.
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground/80 mb-4 block">
-                  Choose Your Profile Type
-                </label>
-                <ProfileTypeSelector
-                  selectedType={profileType}
-                  onSelect={setProfileType}
-                />
-              </div>
+                   <form onSubmit={handleSubmit} className="space-y-6">
+                     <div className="space-y-4">
+                       <label className="text-sm font-medium text-foreground/80 block">
+                         Choose Your Profile Type
+                       </label>
+                       <ProfileTypeSelector
+                         selectedType={profileType}
+                         onSelect={setProfileType}
+                       />
+                     </div>
 
               {profileType && (
                 <div className="space-y-2">

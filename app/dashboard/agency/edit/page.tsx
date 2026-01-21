@@ -167,25 +167,50 @@ export default function EditProfilePage() {
           return;
         }
 
+        // Get profile_type from user metadata (set during signup) or default to agency
+        // The trigger already created a profile with the correct type, so we should fetch it instead
+        // But if for some reason it doesn't exist, we'll create one with the type from metadata
+        let profileType = user.user_metadata?.profile_type || "agency";
+        
         // Create new profile
+        const insertData: any = {
+          name: formData.name,
+          slug: uniqueSlug,
+          description: formData.description || null,
+          niche: formData.niche,
+          location: formData.location || null,
+          website: formData.website || null,
+          email: formData.email || null,
+          price_range_min: priceMin,
+          price_range_max: priceMax,
+          verified: true, // Auto-verify for development (change to false for production)
+          user_id: user.id,
+          profile_type: profileType,
+        };
+
+        // Only add agency-specific fields if profile type is agency
+        if (profileType === "agency") {
+          insertData.founded = formData.founded ? parseInt(formData.founded) : null;
+          insertData.team_size = formData.teamSize ? parseInt(formData.teamSize) : null;
+        }
+
+        // Add KOL-specific fields if profile type is kol
+        if (profileType === "kol") {
+          insertData.twitter_handle = formData.twitterHandle || null;
+          insertData.twitter_followers = formData.twitterFollowers ? parseInt(formData.twitterFollowers) : null;
+          insertData.engagement_rate = formData.engagementRate ? parseFloat(formData.engagementRate) : null;
+          insertData.content_types = formData.contentTypes || [];
+          insertData.price_per_thread = formData.pricePerThread ? parseInt(formData.pricePerThread) : null;
+          insertData.price_per_video = formData.pricePerVideo ? parseInt(formData.pricePerVideo) : null;
+          insertData.price_per_space = formData.pricePerSpace ? parseInt(formData.pricePerSpace) : null;
+        }
+
+        // Add Solana wallet for both types
+        insertData.solana_wallet = formData.solanaWallet || null;
+
         const { data: newProfile, error: createError } = await supabase
           .from("profiles")
-          .insert({
-            name: formData.name,
-            slug: uniqueSlug,
-            description: formData.description || null,
-            niche: formData.niche,
-            location: formData.location || null,
-            website: formData.website || null,
-            email: formData.email || null,
-            founded: formData.founded ? parseInt(formData.founded) : null,
-            team_size: formData.teamSize ? parseInt(formData.teamSize) : null,
-            price_range_min: priceMin,
-            price_range_max: priceMax,
-            verified: true, // Auto-verify for development (change to false for production)
-            user_id: user.id,
-            profile_type: "agency", // Default to agency for now
-          })
+          .insert(insertData)
           .select()
           .single();
 
@@ -561,11 +586,13 @@ export default function EditProfilePage() {
                   ))}
                 </div>
               )}
-            </div>
+              </div>
+            )}
 
-            {/* Pricing & Details */}
-            <div className="p-6 rounded-lg border border-border bg-card space-y-4">
-              <h2 className="text-lg font-semibold mb-4">Pricing & details</h2>
+            {/* Pricing & Details - Agency specific */}
+            {(agency as any)?.profile_type !== "kol" && (
+              <div className="p-6 rounded-lg border border-border bg-card space-y-4">
+                <h2 className="text-lg font-semibold mb-4">Pricing & details</h2>
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -626,7 +653,8 @@ export default function EditProfilePage() {
                   />
                 </div>
               </div>
-            </div>
+              </div>
+            )}
 
             {/* Portfolio Section */}
             {!isCreating && agency && (

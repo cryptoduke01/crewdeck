@@ -52,47 +52,55 @@ export function useMyAgency() {
         }
 
         // Also log what we found
-        if (agencyData) {
-          console.log("Found agency:", agencyData.name, "user_id:", agencyData.user_id, "current user:", user.id);
+        if (profileData) {
+          console.log("Found profile:", profileData.name, "user_id:", profileData.user_id, "current user:", user.id);
         } else {
-          console.log("No agency found for user:", user.id);
+          console.log("No profile found for user:", user.id);
         }
 
-        if (agencyData) {
+        if (profileData) {
           // Fetch services
           const { data: servicesData } = await supabase
             .from("services")
             .select("name")
-            .eq("agency_id", agencyData.id);
+            .eq("profile_id", profileData.id);
 
           const services = servicesData?.map((s: any) => s.name) || [];
 
-          const transformedAgency: Agency = {
-            id: agencyData.id,
-            name: agencyData.name,
-            slug: agencyData.slug,
-            niche: agencyData.niche,
-            rating: parseFloat(agencyData.rating) || 0,
-            reviews: agencyData.review_count || 0,
-            location: agencyData.location || "Remote",
+          const transformedProfile: Agency = {
+            id: profileData.id,
+            name: profileData.name,
+            slug: profileData.slug,
+            profile_type: profileData.profile_type || "agency",
+            niche: profileData.niche,
+            rating: parseFloat(profileData.rating) || 0,
+            reviews: profileData.review_count || 0,
+            location: profileData.location || "Remote",
             services: services,
-            priceRange: agencyData.price_range_min && agencyData.price_range_max
-              ? `$${agencyData.price_range_min.toLocaleString()} - $${agencyData.price_range_max.toLocaleString()}`
+            priceRange: profileData.price_range_min && profileData.price_range_max
+              ? `$${profileData.price_range_min.toLocaleString()} - $${profileData.price_range_max.toLocaleString()}`
               : "Contact for pricing",
-            priceRangeMin: agencyData.price_range_min,
-            priceRangeMax: agencyData.price_range_max,
-            verified: agencyData.verified || false,
-            featured: agencyData.featured || false,
-            premium: agencyData.premium || false,
-            description: agencyData.description,
-            website: agencyData.website,
-            email: agencyData.email,
-            founded: agencyData.founded,
-            teamSize: agencyData.team_size,
-            walletAddress: agencyData.wallet_address,
+            priceRangeMin: profileData.price_range_min,
+            priceRangeMax: profileData.price_range_max,
+            verified: profileData.verified || false,
+            description: profileData.description,
+            website: profileData.website,
+            email: profileData.email,
+            founded: profileData.founded,
+            team_size: profileData.team_size,
+            solana_wallet: profileData.solana_wallet,
+            wallet_verified: profileData.wallet_verified || false,
+            // KOL-specific fields
+            twitter_handle: profileData.twitter_handle,
+            twitter_followers: profileData.twitter_followers,
+            engagement_rate: profileData.engagement_rate ? parseFloat(profileData.engagement_rate) : undefined,
+            content_types: profileData.content_types || [],
+            price_per_thread: profileData.price_per_thread,
+            price_per_video: profileData.price_per_video,
+            price_per_space: profileData.price_per_space,
           };
 
-          setAgency(transformedAgency);
+          setAgency(transformedProfile);
         } else {
           setAgency(null);
         }

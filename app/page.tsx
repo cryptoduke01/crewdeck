@@ -41,29 +41,26 @@ export default function Home() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight tracking-tight">
-              <span className="block mb-1">The Marketing</span>
+              <span className="block mb-1">Find Marketing Agencies</span>
               <span className="block bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
-                Agency Aggregator
-              </span>
-              <span className="block text-2xl sm:text-3xl lg:text-4xl font-medium text-foreground/70 mt-3">
-                for Web3 Projects
+                & KOLs for Your Web3 Project
               </span>
             </h1>
 
             <p className="text-lg sm:text-xl text-foreground/70 max-w-2xl mx-auto mb-8 sm:mb-10 px-2 leading-relaxed">
-              Browse vetted marketing agencies all in one place. Compare services, portfolios, pricing, and reviews to find the perfect match for your project.
+              Browse vetted marketing talent ready to grow your project. From full-service agencies to crypto-native influencers. All in one place.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12 sm:mb-16">
               <Link href="/agencies" className="cursor-pointer w-full sm:w-auto">
                 <Button size="default" className="group cursor-pointer w-full sm:w-auto px-6 shadow-md hover:shadow-lg transition-all">
-                  Browse Agencies
+                  Browse All Profiles
                   <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               <Link href="/auth/signup" className="cursor-pointer w-full sm:w-auto">
                 <Button size="default" variant="outline" className="cursor-pointer w-full sm:w-auto px-6 border-2 hover:bg-foreground/5 transition-all">
-                  Join as Agency
+                  Join as Agency or KOL
                 </Button>
               </Link>
             </div>
@@ -71,16 +68,16 @@ export default function Home() {
             {/* Stats or social proof */}
             <div className="grid grid-cols-3 gap-6 sm:gap-8 max-w-xl mx-auto pt-6 sm:pt-8 border-t border-border/50">
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-foreground">100+</div>
+                <div className="text-xl sm:text-2xl font-bold text-foreground">50+</div>
                 <div className="text-xs text-foreground/60 mt-1">Agencies</div>
               </div>
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-foreground">Verified</div>
-                <div className="text-xs text-foreground/60 mt-1">Quality</div>
+                <div className="text-xl sm:text-2xl font-bold text-foreground">30+</div>
+                <div className="text-xs text-foreground/60 mt-1">KOLs</div>
               </div>
               <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-foreground">Web3</div>
-                <div className="text-xs text-foreground/60 mt-1">Focused</div>
+                <div className="text-xl sm:text-2xl font-bold text-foreground">100%</div>
+                <div className="text-xs text-foreground/60 mt-1">Free Forever</div>
               </div>
             </div>
           </div>
@@ -94,10 +91,10 @@ export default function Home() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl sm:text-4xl font-semibold mb-4">
-              Why use an agency aggregator?
+              Why use crewdeck?
             </h2>
             <p className="text-base text-foreground/60 max-w-2xl mx-auto">
-              Save time and make better decisions by comparing agencies in one place.
+              Save time and make better decisions by comparing marketing agencies and KOLs in one place.
             </p>
           </div>
 
@@ -110,8 +107,8 @@ export default function Home() {
               },
               {
                 icon: Shield,
-                title: "Verified agencies only",
-                description: "Every agency listed is vetted. We check portfolios, verify references, and ensure quality standards.",
+                title: "Verified profiles only",
+                description: "Every agency and KOL listed is vetted. We check portfolios, verify references, and ensure quality standards.",
               },
               {
                 icon: TrendingUp,
@@ -169,7 +166,7 @@ export default function Home() {
               How it works
             </h2>
             <p className="text-base text-foreground/60 max-w-2xl mx-auto">
-              Find and connect with the perfect marketing agency in three steps.
+              Find and connect with the perfect marketing agency or KOL in three steps.
             </p>
           </div>
 
@@ -177,20 +174,20 @@ export default function Home() {
             {[
               {
                 step: "01",
-                title: "Browse agencies",
-                description: "Search and filter agencies by niche, services, budget, location, and more.",
+                title: "Browse profiles",
+                description: "Search and filter agencies and KOLs by type, niche, services, budget, location, and more.",
                 icon: Filter,
               },
               {
                 step: "02",
                 title: "Compare options",
-                description: "Review portfolios, read client testimonials, and compare pricing across agencies.",
+                description: "Review portfolios, read client testimonials, and compare pricing across agencies and KOLs.",
                 icon: CheckCircle2,
               },
               {
                 step: "03",
                 title: "Connect & start",
-                description: "Reach out directly to agencies. Get proposals and begin your project.",
+                description: "Reach out directly to agencies or KOLs. Get proposals and begin your project.",
                 icon: ArrowRight,
               },
             ].map((step, index) => (
@@ -233,15 +230,15 @@ export default function Home() {
             <Logo variant="standalone" size={80} className="h-16 w-16 mx-auto opacity-90" />
           </div>
           <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-            Ready to find your marketing agency?
+            Ready to find your marketing talent?
           </h2>
           <p className="text-lg text-foreground/70 mb-12 max-w-xl mx-auto leading-relaxed">
-            Browse our directory of vetted marketing agencies and find the perfect match for your project.
+            Browse our directory of vetted marketing agencies and KOLs. Find the perfect match for your Web3 project.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/agencies" className="cursor-pointer w-full sm:w-auto">
               <Button size="default" className="group cursor-pointer w-full sm:w-auto px-6 shadow-md hover:shadow-lg transition-all">
-                Browse Agencies
+                Browse Profiles
                 <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
@@ -269,17 +266,12 @@ export default function Home() {
               <ul className="space-y-3 text-sm text-foreground/60">
                 <li>
                   <Link href="/agencies" className="hover:text-foreground transition-colors cursor-pointer">
-                    Browse Agencies
+                    Browse Profiles
                   </Link>
                 </li>
                 <li>
                   <Link href="/auth/signup" className="hover:text-foreground transition-colors cursor-pointer">
-                    Join as Agency
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/pricing" className="hover:text-foreground transition-colors cursor-pointer">
-                    Pricing
+                    Join as Agency or KOL
                   </Link>
                 </li>
               </ul>

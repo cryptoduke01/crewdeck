@@ -85,51 +85,56 @@ export function Navbar() {
                     Dashboard
                     <ChevronDown className="h-3.5 w-3.5" />
                   </Button>
-                  {/* Dashboard link is now inside dropdown - removed separate link */}
-                  {dashboardDropdownOpen && (
-                    <>
-                      <div 
-                        className="fixed inset-0 z-40" 
-                        onClick={() => setDashboardDropdownOpen(false)}
-                      />
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-border bg-card shadow-lg z-50 overflow-hidden"
-                      >
-                        <div className="p-2">
-                          <div className="px-3 py-2 text-xs text-foreground/60 border-b border-border mb-2">
-                            {user.email}
-                          </div>
-                          <Link href="/dashboard/agency" onClick={() => setDashboardDropdownOpen(false)}>
-                            <div className="px-3 py-2 text-sm hover:bg-muted rounded-md cursor-pointer transition-colors">
-                              Dashboard
+                  {/* Dashboard dropdown */}
+                  <AnimatePresence>
+                    {dashboardDropdownOpen && (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-40" 
+                          onClick={() => setDashboardDropdownOpen(false)}
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute right-0 top-full mt-2 w-72 rounded-lg border border-border bg-card shadow-xl z-50 overflow-hidden"
+                        >
+                          <div className="p-2 space-y-1">
+                            <div className="px-3 py-2 text-xs text-foreground/60 border-b border-border mb-1">
+                              <div className="truncate max-w-full" title={user.email}>
+                                {user.email}
+                              </div>
                             </div>
-                          </Link>
-                          <div className="px-3 py-2 text-sm text-foreground/70 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Bookmark className="h-4 w-4" />
-                              Bookmarked Agencies
+                            <Link href="/dashboard/agency" onClick={() => setDashboardDropdownOpen(false)}>
+                              <div className="px-3 py-2 text-sm hover:bg-muted rounded-md cursor-pointer transition-colors">
+                                Dashboard
+                              </div>
+                            </Link>
+                            <div className="px-3 py-2 text-sm text-foreground/70 flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Bookmark className="h-4 w-4 flex-shrink-0" />
+                                <span className="truncate">Bookmarked</span>
+                              </div>
+                              <span className="text-xs font-medium bg-foreground/10 px-2 py-0.5 rounded-full flex-shrink-0">
+                                {bookmarksCount}
+                              </span>
                             </div>
-                            <span className="text-xs font-medium bg-foreground/10 px-2 py-0.5 rounded-full">
-                              {bookmarksCount}
-                            </span>
+                            <button
+                              onClick={async () => {
+                                await signOut();
+                                setDashboardDropdownOpen(false);
+                              }}
+                              className="w-full px-3 py-2 text-sm text-foreground/70 hover:bg-muted rounded-md cursor-pointer transition-colors flex items-center gap-2"
+                            >
+                              <LogOut className="h-4 w-4 flex-shrink-0" />
+                              <span>Sign out</span>
+                            </button>
                           </div>
-                          <button
-                            onClick={async () => {
-                              await signOut();
-                              setDashboardDropdownOpen(false);
-                            }}
-                            className="w-full px-3 py-2 text-sm text-foreground/70 hover:bg-muted rounded-md cursor-pointer transition-colors flex items-center gap-2 mt-2"
-                          >
-                            <LogOut className="h-4 w-4" />
-                            Sign out
-                          </button>
-                        </div>
-                      </motion.div>
-                    </>
-                  )}
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
                 </div>
               ) : (
                 <Link href="/auth/signup">
