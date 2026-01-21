@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { FAQAccordion } from "@/components/faq-accordion";
@@ -76,11 +77,11 @@ export default function PricingPage() {
             </div>
 
             {/* Featured Plan */}
-            <div className="relative p-8 rounded-xl border-2 border-foreground/40 bg-card shadow-lg">
+            <div className="relative p-8 pt-12 rounded-xl border-2 border-foreground/40 bg-card shadow-lg">
               {/* Stacked layers effect */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-foreground/5 rounded-full blur-2xl -z-10"></div>
               
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
                 <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-foreground text-background text-xs font-medium">
                   <Sparkles className="h-3 w-3" />
                   Popular
@@ -90,7 +91,7 @@ export default function PricingPage() {
               <div className="mb-6">
                 <h3 className="text-2xl font-bold mb-2">Featured</h3>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold">$99</span>
+                  <span className="text-4xl font-bold">$20</span>
                   <span className="text-foreground/60">/month</span>
                 </div>
                 <p className="text-sm text-foreground/60 mt-2">Get more visibility</p>
@@ -142,7 +143,7 @@ export default function PricingPage() {
                   <h3 className="text-2xl font-bold">Premium</h3>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold">$299</span>
+                  <span className="text-4xl font-bold">$60</span>
                   <span className="text-foreground/60">/month</span>
                 </div>
                 <p className="text-sm text-foreground/60 mt-2">Maximum exposure</p>

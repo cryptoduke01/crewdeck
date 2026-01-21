@@ -23,6 +23,7 @@ export interface Agency {
   email?: string;
   founded?: number;
   teamSize?: string;
+  walletAddress?: string;
 }
 
 export interface PortfolioItem {

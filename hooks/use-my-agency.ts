@@ -82,11 +82,14 @@ export function useMyAgency() {
             priceRangeMin: agencyData.price_range_min,
             priceRangeMax: agencyData.price_range_max,
             verified: agencyData.verified || false,
+            featured: agencyData.featured || false,
+            premium: agencyData.premium || false,
             description: agencyData.description,
             website: agencyData.website,
             email: agencyData.email,
             founded: agencyData.founded,
             teamSize: agencyData.team_size,
+            walletAddress: agencyData.wallet_address,
           };
 
           setAgency(transformedAgency);
@@ -163,6 +166,7 @@ export function useMyAgency() {
           email: agencyData.email,
           founded: agencyData.founded,
           teamSize: agencyData.team_size,
+          walletAddress: agencyData.wallet_address,
         };
 
         setAgency(transformedAgency);

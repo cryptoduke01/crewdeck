@@ -6,6 +6,7 @@ export interface EmailTemplate {
 
 // Get website URL from env or default to crewdeck.xyz
 const WEBSITE_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://crewdeck.xyz";
+const LOGO_URL = `${WEBSITE_URL}/crewdeck/svgs/logos-with-texts/crewdeck-logo-text-black.svg`;
 
 export function newMessageEmail(agencyName: string, senderName: string, messagePreview: string, messageUrl: string): EmailTemplate {
   const subject = `New message from ${senderName} on crewdeck`;
@@ -17,8 +18,11 @@ export function newMessageEmail(agencyName: string, senderName: string, messageP
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: #f8f9fa; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #fafafa;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <img src="${LOGO_URL}" alt="crewdeck" style="height: 40px; margin-bottom: 10px;" />
+        </div>
+        <div style="background: #fff; border-radius: 8px; padding: 30px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
           <h1 style="margin: 0 0 10px 0; font-size: 24px; color: #000;">New Message on crewdeck</h1>
           <p style="margin: 0; color: #666; font-size: 14px;">You have received a new inquiry</p>
         </div>
@@ -75,8 +79,11 @@ export function newReviewEmail(agencyName: string, reviewerName: string, rating:
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: #f8f9fa; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #fafafa;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <img src="${LOGO_URL}" alt="crewdeck" style="height: 40px; margin-bottom: 10px;" />
+        </div>
+        <div style="background: #fff; border-radius: 8px; padding: 30px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
           <h1 style="margin: 0 0 10px 0; font-size: 24px; color: #000;">New Review on crewdeck</h1>
           <p style="margin: 0; color: #666; font-size: 14px;">Someone left a review for your agency</p>
         </div>
@@ -137,8 +144,11 @@ export function welcomeEmail(agencyName: string, dashboardUrl: string): EmailTem
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: #f8f9fa; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #fafafa;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <img src="${LOGO_URL}" alt="crewdeck" style="height: 40px; margin-bottom: 10px;" />
+        </div>
+        <div style="background: #fff; border-radius: 8px; padding: 30px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
           <h1 style="margin: 0 0 10px 0; font-size: 24px; color: #000;">Welcome to crewdeck!</h1>
           <p style="margin: 0; color: #666; font-size: 14px;">Your agency profile is ready</p>
         </div>

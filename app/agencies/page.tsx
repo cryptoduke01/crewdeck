@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 import { useAgencies, type SortOption } from "@/hooks/use-agencies";
 import { Loading, LoadingSpinner } from "@/components/loading";
 import { AgencyGridSkeleton } from "@/components/skeleton";
@@ -491,6 +492,7 @@ export default function AgenciesPage() {
           )}
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

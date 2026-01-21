@@ -85,6 +85,7 @@ export function Navbar() {
                     Dashboard
                     <ChevronDown className="h-3.5 w-3.5" />
                   </Button>
+                  {/* Dashboard link is now inside dropdown - removed separate link */}
                   {dashboardDropdownOpen && (
                     <>
                       <div 

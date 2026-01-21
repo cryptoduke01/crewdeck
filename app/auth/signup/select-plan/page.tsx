@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 // Disable static generation for this page
 export const dynamic = 'force-dynamic';
 import Link from "next/link";
-import { Check, Sparkles, Crown, ArrowRight } from "lucide-react";
+import { Check, Sparkles, Crown, ArrowRight, Zap, CreditCard } from "lucide-react";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
@@ -21,6 +21,7 @@ export default function SelectPlanPage() {
   const { user, loading: authLoading } = useAuth();
   const { success: showSuccess, error: showError } = useToast();
   const [selectedPlan, setSelectedPlan] = useState<"free" | "featured" | "premium">("free");
+  const [paymentMethod, setPaymentMethod] = useState<"crypto" | "fiat" | null>(null);
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
@@ -45,9 +46,50 @@ export default function SelectPlanPage() {
         showSuccess("Account created!", "Your free account is ready. You can upgrade anytime from your dashboard.");
         router.push("/dashboard/agency");
       } else {
-        // For featured/premium, redirect to payment page
-        showSuccess("Plan selected!", "Redirecting to checkout...");
-        router.push(`/pricing?plan=${selectedPlan}`);
+        // Process payment
+        if (paymentMethod === "crypto") {
+          const response = await fetch("/api/payments/solana/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              plan: selectedPlan,
+              userId: user.id,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to create payment");
+          }
+
+          const data = await response.json();
+          if (data.url) {
+            window.location.href = data.url;
+          } else {
+            throw new Error("Payment URL not generated");
+          }
+        } else {
+          const response = await fetch("/api/payments/stripe/create-checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              plan: selectedPlan,
+              userId: user.id,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to create checkout");
+          }
+
+          const data = await response.json();
+          if (data.url) {
+            window.location.href = data.url;
+          } else {
+            throw new Error("Checkout URL not generated");
+          }
+        }
       }
     } catch (err) {
       showError("Error", err instanceof Error ? err.message : "Failed to process plan selection");
@@ -167,7 +209,7 @@ export default function SelectPlanPage() {
               <div className="mb-6">
                 <h3 className="text-xl font-bold mb-2">Featured</h3>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">$99</span>
+                  <span className="text-3xl font-bold">$20</span>
                   <span className="text-foreground/60">/month</span>
                 </div>
               </div>
@@ -216,7 +258,7 @@ export default function SelectPlanPage() {
                   <h3 className="text-xl font-bold">Premium</h3>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">$299</span>
+                  <span className="text-3xl font-bold">$60</span>
                   <span className="text-foreground/60">/month</span>
                 </div>
               </div>

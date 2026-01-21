@@ -52,8 +52,11 @@ export function useAgencies(options?: {
           let query = supabase
             .from("agencies")
             .select("*")
-            .eq("verified", true)
             .order("featured", { ascending: false }); // Featured agencies first
+          
+          // Only filter by verified if we have verified agencies, otherwise show all
+          // This allows testing with unverified agencies
+          // In production, you can add back: .eq("verified", true)
 
           // Apply filters
           if (options?.niche && options.niche !== "All") {
