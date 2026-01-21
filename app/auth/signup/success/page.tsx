@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { CheckCircle2, ArrowRight } from "lucide-react";
@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Logo } from "@/components/logo";
+import { Loading } from "@/components/loading";
 
 // Disable static generation - this page uses searchParams
 export const dynamic = 'force-dynamic';
 
-export default function SignupSuccessPage() {
+function SignupSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const profileName = searchParams.get("name") || "there";
@@ -77,5 +78,19 @@ export default function SignupSuccessPage() {
       </div>
       <Footer />
     </div>
+  );
+}
+
+export default function SignupSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <Loading />
+        <Footer />
+      </div>
+    }>
+      <SignupSuccessContent />
+    </Suspense>
   );
 }
