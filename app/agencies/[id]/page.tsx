@@ -14,6 +14,9 @@ import {
   Award,
   ArrowLeft,
   Image as ImageIcon,
+  Twitter,
+  BarChart3,
+  Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
@@ -105,12 +108,27 @@ export default function AgencyProfilePage() {
                   <span className="font-medium text-lg">{agency.rating}</span>
                   <span className="text-sm text-foreground/50">({agency.reviews} reviews)</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-foreground/60">
-                  <MapPin className="h-4 w-4" />
-                  {agency.location}
-                </div>
+                {(agency as any).profile_type === "kol" && (agency as any).twitter_handle && (
+                  <div className="flex items-center gap-2 text-sm text-foreground/60">
+                    <Twitter className="h-4 w-4" />
+                    <a 
+                      href={`https://twitter.com/${(agency as any).twitter_handle.replace(/^@/, "")}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hover:underline cursor-pointer"
+                    >
+                      @{(agency as any).twitter_handle.replace(/^@/, "")}
+                    </a>
+                  </div>
+                )}
+                {agency.location && (
+                  <div className="flex items-center gap-2 text-sm text-foreground/60">
+                    <MapPin className="h-4 w-4" />
+                    {agency.location}
+                  </div>
+                )}
                 <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-muted text-foreground/70 border border-border">
-                  {agency.niche}
+                  {(agency as any).profile_type === "kol" ? "KOL" : agency.niche}
                 </span>
               </div>
               {agency.description && (
@@ -120,14 +138,19 @@ export default function AgencyProfilePage() {
               )}
             </div>
 
-            {/* Stats */}
+            {/* Stats - Different for Agency vs KOL */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {[
-                { icon: Calendar, label: "Founded", value: agency.founded },
-                { icon: Users, label: "Team Size", value: agency.teamSize },
+              {((agency as any).profile_type === "kol" ? [
+                { icon: Twitter, label: "Followers", value: (agency as any).twitter_followers ? `${((agency as any).twitter_followers / 1000).toFixed(1)}K` : null },
+                { icon: BarChart3, label: "Engagement", value: (agency as any).engagement_rate ? `${(agency as any).engagement_rate}%` : null },
                 { icon: TrendingUp, label: "Reviews", value: `${agency.reviews}` },
                 { icon: Award, label: "Rating", value: `${agency.rating}/5` },
-              ].filter(stat => stat.value).map((stat, index) => (
+              ] : [
+                { icon: Calendar, label: "Founded", value: agency.founded },
+                { icon: Users, label: "Team Size", value: (agency as any).team_size },
+                { icon: TrendingUp, label: "Reviews", value: `${agency.reviews}` },
+                { icon: Award, label: "Rating", value: `${agency.rating}/5` },
+              ]).filter(stat => stat.value).map((stat, index) => (
                 <motion.div
                   key={stat.label}
                   initial={{ opacity: 0, y: 15 }}
@@ -154,7 +177,20 @@ export default function AgencyProfilePage() {
                 <Button size="lg" className="gap-2 cursor-pointer" asChild>
                   <a href={`mailto:${agency.email}`}>
                     <Mail className="h-4 w-4" />
-                    Contact Agency
+                    Contact {(agency as any).profile_type === "kol" ? "KOL" : "Agency"}
+                  </a>
+                </Button>
+              )}
+              {(agency as any).profile_type === "kol" && (agency as any).twitter_handle && (
+                <Button size="lg" variant="outline" className="gap-2 cursor-pointer" asChild>
+                  <a 
+                    href={`https://twitter.com/${(agency as any).twitter_handle.replace(/^@/, "")}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="cursor-pointer"
+                  >
+                    <Twitter className="h-4 w-4" />
+                    View Twitter
                   </a>
                 </Button>
               )}
@@ -172,7 +208,7 @@ export default function AgencyProfilePage() {
                 className="cursor-pointer"
                 onClick={() => shareUrl(
                   window.location.href,
-                  `${agency.name} - Marketing Agency`,
+                  `${agency.name} - ${(agency as any).profile_type === "kol" ? "KOL" : "Marketing Agency"}`,
                   `Check out ${agency.name} on crewdeck.`
                 )}
               >
@@ -181,8 +217,8 @@ export default function AgencyProfilePage() {
             </div>
           </motion.div>
 
-          {/* Services Section */}
-          {agency.services.length > 0 && (
+          {/* Services Section - Agency only */}
+          {(agency as any).profile_type !== "kol" && agency.services.length > 0 && (
             <motion.section
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -219,6 +255,64 @@ export default function AgencyProfilePage() {
                 <p className="text-xl font-semibold">{agency.priceRange}</p>
                 <p className="text-xs text-foreground/50 mt-1">per project (varies by scope)</p>
               </div>
+            </motion.section>
+          )}
+
+          {/* KOL Content Types & Pricing Section */}
+          {(agency as any).profile_type === "kol" && (agency as any).content_types && (agency as any).content_types.length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="mb-16"
+            >
+              <h2 className="text-2xl font-semibold mb-6">Content Types & Pricing</h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {(agency as any).content_types.map((contentType: string, index: number) => {
+                  let price = null;
+                  if (contentType === "threads" && (agency as any).price_per_thread) {
+                    price = (agency as any).price_per_thread;
+                  } else if (contentType === "videos" && (agency as any).price_per_video) {
+                    price = (agency as any).price_per_video;
+                  } else if (contentType === "spaces" && (agency as any).price_per_space) {
+                    price = (agency as any).price_per_space;
+                  }
+                  
+                  return (
+                    <motion.div
+                      key={contentType}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.3, delay: index * 0.03 }}
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      className="p-5 rounded-lg border border-border bg-card hover:border-foreground/30 transition-all"
+                    >
+                      <h3 className="text-lg font-medium mb-2 capitalize">{contentType}</h3>
+                      {price ? (
+                        <p className="text-2xl font-semibold">${price.toLocaleString()}</p>
+                      ) : (
+                        <p className="text-sm text-foreground/50">Contact for pricing</p>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </div>
+              {(agency as any).solana_wallet && (
+                <div className="mt-6 p-4 rounded-lg border border-border bg-card">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Wallet className="h-4 w-4 text-foreground/60" />
+                    <span className="text-sm font-medium text-foreground/80">Solana Wallet</span>
+                    {(agency as any).wallet_verified && (
+                      <CheckCircle2 className="h-4 w-4 text-foreground/40" title="Verified" />
+                    )}
+                  </div>
+                  <p className="text-xs font-mono text-foreground/60 break-all">
+                    {(agency as any).solana_wallet}
+                  </p>
+                </div>
+              )}
             </motion.section>
           )}
 
@@ -345,7 +439,7 @@ export default function AgencyProfilePage() {
                 <div className="p-6 rounded-lg border border-border bg-card">
                   <h3 className="text-lg font-semibold mb-2">Response time</h3>
                   <p className="text-sm text-foreground/60">
-                    Agencies typically respond within 24-48 hours.
+                    {(agency as any).profile_type === "kol" ? "KOLs" : "Agencies"} typically respond within 24-48 hours.
                   </p>
                 </div>
               </div>

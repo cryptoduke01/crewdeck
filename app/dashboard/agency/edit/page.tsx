@@ -34,6 +34,15 @@ export default function EditProfilePage() {
     teamSize: "",
     priceRangeMin: "",
     priceRangeMax: "",
+    // KOL-specific fields
+    twitterHandle: "",
+    twitterFollowers: "",
+    engagementRate: "",
+    contentTypes: [] as string[],
+    pricePerThread: "",
+    pricePerVideo: "",
+    pricePerSpace: "",
+    solanaWallet: "",
   });
 
   const [services, setServices] = useState<string[]>([]);
@@ -60,9 +69,18 @@ export default function EditProfilePage() {
         website: agency.website || "",
         email: agency.email || "",
         founded: agency.founded?.toString() || "",
-        teamSize: agency.teamSize || "",
+        teamSize: agency.team_size?.toString() || "",
         priceRangeMin: agency.priceRangeMin ? String(agency.priceRangeMin) : "",
         priceRangeMax: agency.priceRangeMax ? String(agency.priceRangeMax) : "",
+        // KOL-specific fields
+        twitterHandle: (agency as any).twitter_handle || "",
+        twitterFollowers: (agency as any).twitter_followers?.toString() || "",
+        engagementRate: (agency as any).engagement_rate?.toString() || "",
+        contentTypes: (agency as any).content_types || [],
+        pricePerThread: (agency as any).price_per_thread?.toString() || "",
+        pricePerVideo: (agency as any).price_per_video?.toString() || "",
+        pricePerSpace: (agency as any).price_per_space?.toString() || "",
+        solanaWallet: (agency as any).solana_wallet || "",
       });
       setServices(agency.services || []);
       
@@ -495,9 +513,10 @@ export default function EditProfilePage() {
               </div>
             </div>
 
-            {/* Services */}
-            <div className="p-6 rounded-lg border border-border bg-card space-y-4">
-              <h2 className="text-lg font-semibold mb-4">Services</h2>
+            {/* Services - Agency only */}
+            {(agency as any)?.profile_type !== "kol" && (
+              <div className="p-6 rounded-lg border border-border bg-card space-y-4">
+                <h2 className="text-lg font-semibold mb-4">Services</h2>
 
               <div className="flex gap-2">
                 <input

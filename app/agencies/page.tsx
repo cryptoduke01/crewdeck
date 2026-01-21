@@ -24,14 +24,13 @@ import { analytics } from "@/lib/analytics/client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { FilterModal } from "@/components/filter-modal";
 import { SearchAutocomplete } from "@/components/search-autocomplete";
-import { SlidersHorizontal, Sparkles, Crown } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { highlightText } from "@/lib/search/highlight";
 
 const niches = ["All", "DeFi", "NFT", "Web3", "Gaming", "Metaverse"];
 const locations = ["All", "Remote", "New York, US", "San Francisco, US", "Los Angeles, US", "Austin, US", "Seattle, US"];
 const sortOptions: { value: SortOption; label: string }[] = [
-  { value: "featured", label: "Featured First" },
   { value: "rating", label: "Highest Rated" },
   { value: "reviews", label: "Most Reviews" },
   { value: "price-low", label: "Price: Low to High" },
@@ -41,6 +40,7 @@ const sortOptions: { value: SortOption; label: string }[] = [
 
 export default function AgenciesPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedProfileType, setSelectedProfileType] = useState<"all" | "agency" | "kol">("all");
   const [selectedNiche, setSelectedNiche] = useState("All");
   const [selectedLocation, setSelectedLocation] = useState("All");
   const [minPrice, setMinPrice] = useState<number | undefined>(undefined);
@@ -55,6 +55,7 @@ export default function AgenciesPage() {
   const debouncedMaxPrice = useDebounce(maxPrice, 500);
 
   const { agencies, loading, error } = useAgencies({
+    profileType: selectedProfileType,
     niche: selectedNiche,
     searchQuery: debouncedSearchQuery || undefined,
     location: selectedLocation,
@@ -102,17 +103,18 @@ export default function AgenciesPage() {
       try {
         const supabase = createSupabaseClient();
         // Get all unique services from verified agencies
-        const { data: agenciesData } = await supabase
-          .from("agencies")
+        const { data: profilesData } = await supabase
+          .from("profiles")
           .select("id")
-          .eq("verified", true);
+          .eq("verified", true)
+          .eq("profile_type", "agency"); // Only fetch services from agencies
         
-        if (agenciesData && agenciesData.length > 0) {
-          const agencyIds = agenciesData.map(a => a.id);
+        if (profilesData && profilesData.length > 0) {
+          const profileIds = profilesData.map(p => p.id);
           const { data: servicesData } = await supabase
             .from("services")
             .select("name")
-            .in("agency_id", agencyIds);
+            .in("profile_id", profileIds);
           
           if (servicesData) {
             const uniqueServices = Array.from(new Set(servicesData.map(s => s.name))).sort();
@@ -138,10 +140,11 @@ export default function AgenciesPage() {
     });
   };
 
-  const hasActiveFilters = Boolean(selectedNiche !== "All" || selectedLocation !== "All" || searchQuery || minPrice !== undefined || maxPrice !== undefined || selectedServices.length > 0 || sortBy !== "rating");
+  const hasActiveFilters = Boolean(selectedProfileType !== "all" || selectedNiche !== "All" || selectedLocation !== "All" || searchQuery || minPrice !== undefined || maxPrice !== undefined || selectedServices.length > 0 || sortBy !== "rating");
 
   const clearFilters = () => {
     setSearchQuery("");
+    setSelectedProfileType("all");
     setSelectedNiche("All");
     setSelectedLocation("All");
     setMinPrice(undefined);
@@ -209,12 +212,62 @@ export default function AgenciesPage() {
             transition={{ duration: 0.5 }}
             className="mb-12"
           >
-            <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-              Marketing Agencies
-            </h1>
-            <p className="text-lg text-foreground/70 max-w-2xl">
-              Browse vetted marketing agencies. Compare services, portfolios, and reviews.
-            </p>
+            <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+              <div>
+                <h1 className="text-4xl sm:text-5xl font-bold mb-2">
+                  {selectedProfileType === "kol" ? "KOLs & Influencers" : selectedProfileType === "agency" ? "Marketing Agencies" : "Browse Profiles"}
+                </h1>
+                <p className="text-lg text-foreground/70 max-w-2xl">
+                  {selectedProfileType === "kol" 
+                    ? "Browse crypto-native influencers and content creators." 
+                    : selectedProfileType === "agency"
+                    ? "Browse vetted marketing agencies. Compare services, portfolios, and reviews."
+                    : "Browse vetted marketing agencies and KOLs. Compare services, portfolios, and reviews."}
+                </p>
+              </div>
+              {/* Profile Type Selector */}
+              <div className="flex gap-2 border border-border rounded-lg p-1 bg-card">
+                <button
+                  onClick={() => {
+                    setSelectedProfileType("all");
+                    analytics.track("Profile Type Filter", { type: "all" });
+                  }}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                    selectedProfileType === "all"
+                      ? "bg-foreground text-background"
+                      : "text-foreground/70 hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedProfileType("agency");
+                    analytics.track("Profile Type Filter", { type: "agency" });
+                  }}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                    selectedProfileType === "agency"
+                      ? "bg-foreground text-background"
+                      : "text-foreground/70 hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  Agencies
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedProfileType("kol");
+                    analytics.track("Profile Type Filter", { type: "kol" });
+                  }}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                    selectedProfileType === "kol"
+                      ? "bg-foreground text-background"
+                      : "text-foreground/70 hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  KOLs
+                </button>
+              </div>
+            </div>
           </motion.div>
 
           {/* Search and Filters */}
@@ -249,6 +302,7 @@ export default function AgenciesPage() {
                       maxPrice !== undefined ? 1 : 0,
                       selectedServices.length,
                       sortBy !== "rating" ? 1 : 0,
+                      selectedProfileType !== "all" ? 1 : 0,
                     ].reduce((a, b) => a + b, 0)}
                   </span>
                 )}
@@ -259,6 +313,11 @@ export default function AgenciesPage() {
             {hasActiveFilters && (
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs text-foreground/60">Active filters:</span>
+                {selectedProfileType !== "all" && (
+                  <span className="px-2 py-1 rounded text-xs bg-muted text-foreground/70 border border-border">
+                    {selectedProfileType === "agency" ? "Agencies" : "KOLs"}
+                  </span>
+                )}
                 {selectedNiche !== "All" && (
                   <span className="px-2 py-1 rounded text-xs bg-muted text-foreground/70 border border-border">
                     {selectedNiche}
@@ -328,7 +387,9 @@ export default function AgenciesPage() {
           {/* Results Header */}
           <div className="mb-6 flex items-center justify-between">
             <div className="text-sm text-foreground/60">
-              {agencies.length} {agencies.length === 1 ? "agency" : "agencies"} found
+              {agencies.length} {agencies.length === 1 
+                ? (selectedProfileType === "kol" ? "KOL" : selectedProfileType === "agency" ? "agency" : "profile")
+                : (selectedProfileType === "kol" ? "KOLs" : selectedProfileType === "agency" ? "agencies" : "profiles")} found
               {totalPages > 1 && ` • Page ${currentPage} of ${totalPages}`}
             </div>
             {loading && agencies.length > 0 && (
@@ -353,20 +414,11 @@ export default function AgenciesPage() {
                   <div className="absolute inset-0 bg-foreground/5 rounded-xl blur-xl group-hover:bg-foreground/10 transition-all -z-10" style={{ transform: `translate(${index % 3 * 2}px, ${index % 3 * 2}px)` }}></div>
                   
                   <div className="relative p-6 rounded-xl border-2 border-border bg-card hover:border-foreground/40 hover:shadow-md transition-all h-full flex flex-col">
-                    {/* Premium/Featured Badge */}
-                    {agency.premium && (
-                      <div className="absolute top-4 right-4">
-                        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-foreground text-background border border-foreground">
-                          <Crown className="h-3 w-3" />
-                          <span className="text-xs font-medium">Premium</span>
-                        </div>
-                      </div>
-                    )}
-                    {!agency.premium && agency.featured && (
+                    {/* Profile Type Badge */}
+                    {(agency as any).profile_type === "kol" && (
                       <div className="absolute top-4 right-4">
                         <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-foreground/10 border border-foreground/20">
-                          <Sparkles className="h-3 w-3 text-foreground/60" />
-                          <span className="text-xs font-medium text-foreground/60">Featured</span>
+                          <span className="text-xs font-medium text-foreground/60">KOL</span>
                         </div>
                       </div>
                     )}
