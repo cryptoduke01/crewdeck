@@ -92,7 +92,7 @@ export function ReviewForm({ agencyId, agencyName, onSuccess }: ReviewFormProps)
         // Import and use email utility
         import("@/lib/email/utils").then(({ sendNewReviewNotification }) => {
           sendNewReviewNotification(
-            agencyData.email,
+            profileData.email,
             agencyName,
             author.trim() || "Anonymous",
             rating,
