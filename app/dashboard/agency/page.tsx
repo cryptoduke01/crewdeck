@@ -27,6 +27,7 @@ export default function AgencyDashboardPage() {
   });
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
