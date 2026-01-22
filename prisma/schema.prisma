@@ -21,6 +21,7 @@ model Profile {
   website     String?
   email       String?
   location    String?
+  logo_url    String?  // Profile picture for KOLs or logo for agencies
   founded     Int?
   team_size   Int?     // For agencies
   

@@ -308,42 +308,68 @@ export default function EditProfilePage() {
         // Only include fields relevant to profile type
         if (profileType === "kol") {
           // KOL-specific fields only
-          updateData.twitter_handle = formData.twitterHandle || null;
+          updateData.twitter_handle = formData.twitterHandle && formData.twitterHandle.trim() 
+            ? formData.twitterHandle.trim() 
+            : null;
           updateData.twitter_followers = formData.twitterFollowers && formData.twitterFollowers.trim() 
-            ? parseInt(formData.twitterFollowers) || null 
+            ? (parseInt(formData.twitterFollowers) || null)
             : null;
           updateData.engagement_rate = formData.engagementRate && formData.engagementRate.trim()
-            ? parseFloat(formData.engagementRate) || null
+            ? (parseFloat(formData.engagementRate) || null)
             : null;
-          updateData.content_types = formData.contentTypes || [];
+          updateData.content_types = formData.contentTypes && formData.contentTypes.length > 0
+            ? formData.contentTypes
+            : [];
           updateData.price_per_thread = formData.pricePerThread && formData.pricePerThread.trim()
-            ? parseInt(formData.pricePerThread) || null
+            ? (parseInt(formData.pricePerThread) || null)
             : null;
           updateData.price_per_video = formData.pricePerVideo && formData.pricePerVideo.trim()
-            ? parseInt(formData.pricePerVideo) || null
+            ? (parseInt(formData.pricePerVideo) || null)
             : null;
           updateData.price_per_space = formData.pricePerSpace && formData.pricePerSpace.trim()
-            ? parseInt(formData.pricePerSpace) || null
+            ? (parseInt(formData.pricePerSpace) || null)
             : null;
+          
+          // Explicitly exclude agency fields for KOLs
+          delete updateData.founded;
+          delete updateData.team_size;
+          delete updateData.price_range_min;
+          delete updateData.price_range_max;
         } else {
           // Agency-specific fields only
           updateData.founded = formData.founded && formData.founded.trim()
-            ? parseInt(formData.founded) || null
+            ? (parseInt(formData.founded) || null)
             : null;
           updateData.team_size = formData.teamSize && formData.teamSize.trim()
-            ? parseInt(formData.teamSize) || null
+            ? (parseInt(formData.teamSize) || null)
             : null;
           updateData.price_range_min = priceMin;
           updateData.price_range_max = priceMax;
+          
+          // Explicitly exclude KOL fields for agencies
+          delete updateData.twitter_handle;
+          delete updateData.twitter_followers;
+          delete updateData.engagement_rate;
+          delete updateData.content_types;
+          delete updateData.price_per_thread;
+          delete updateData.price_per_video;
+          delete updateData.price_per_space;
         }
 
-        // Clean update data - remove undefined values and handle NaN/null properly
+        // Clean update data - remove undefined values, empty strings, and handle NaN/null properly
         const cleanUpdateData: any = {};
         Object.keys(updateData).forEach(key => {
           const value = updateData[key];
-          // Only include defined values, and convert NaN to null
+          // Only include defined values, and convert NaN/empty strings to null
           if (value !== undefined) {
             if (typeof value === 'number' && isNaN(value)) {
+              // Skip NaN values
+              return;
+            } else if (typeof value === 'string' && value.trim() === '') {
+              // Convert empty strings to null
+              cleanUpdateData[key] = null;
+            } else if (value === '') {
+              // Convert empty string to null
               cleanUpdateData[key] = null;
             } else {
               cleanUpdateData[key] = value;
@@ -354,40 +380,75 @@ export default function EditProfilePage() {
         // Log for debugging
         console.log("Updating profile with data:", cleanUpdateData);
 
-        const { error: profileError } = await supabase
+        const { error: profileError, data: updatedData } = await supabase
           .from("profiles")
           .update(cleanUpdateData)
-          .eq("id", agency.id);
+          .eq("id", agency.id)
+          .select();
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          // Better error logging - handle different error structures
+          const errorDetails = {
+            message: profileError.message,
+            details: profileError.details,
+            hint: profileError.hint,
+            code: profileError.code,
+            status: (profileError as any).status,
+            statusText: (profileError as any).statusText,
+            fullError: JSON.stringify(profileError, Object.getOwnPropertyNames(profileError)),
+            updateData: cleanUpdateData,
+            profileType: profileType
+          };
+          
+          console.error("Profile update error details:", errorDetails);
+          
+          // Provide more specific error message
+          let errorMsg = profileError.message || "Unknown error";
+          if (profileError.details) {
+            errorMsg += `: ${profileError.details}`;
+          } else if ((profileError as any).status) {
+            errorMsg += ` (Status: ${(profileError as any).status})`;
+          }
+          if (profileError.hint) {
+            errorMsg += ` (${profileError.hint})`;
+          }
+          throw new Error(errorMsg);
+        }
 
-        // Update services (delete all, then insert new ones)
-        const { error: deleteError } = await supabase
-          .from("services")
-          .delete()
-          .eq("profile_id", agency.id);
-
-        if (deleteError) throw deleteError;
-
-        if (services.length > 0) {
-          const servicesToInsert = services.map((service) => ({
-            profile_id: agency.id,
-            name: service,
-          }));
-
-          const { error: insertError } = await supabase
+        // Update services (only for agencies, not KOLs)
+        if (profileType !== "kol") {
+          const { error: deleteError } = await supabase
             .from("services")
-            .insert(servicesToInsert);
+            .delete()
+            .eq("profile_id", agency.id);
 
-          if (insertError) throw insertError;
+          if (deleteError) throw deleteError;
+
+          if (services.length > 0) {
+            const servicesToInsert = services.map((service) => ({
+              profile_id: agency.id,
+              name: service,
+            }));
+
+            const { error: insertError } = await supabase
+              .from("services")
+              .insert(servicesToInsert);
+
+            if (insertError) throw insertError;
+          }
         }
 
         // Update portfolio items (don't fail the whole update if portfolio save fails)
+        // Portfolio is optional - users can add it later
         try {
           await savePortfolioItems(agency.id);
         } catch (portfolioErr) {
-          console.error("Error saving portfolio:", portfolioErr);
-          // Don't throw - portfolio can be saved separately
+          // Better error logging
+          const errorDetails = portfolioErr instanceof Error 
+            ? portfolioErr.message 
+            : JSON.stringify(portfolioErr, Object.getOwnPropertyNames(portfolioErr));
+          console.error("Error saving portfolio (non-fatal, portfolio is optional):", errorDetails);
+          // Don't throw - portfolio can be saved separately and is optional
         }
 
         analytics.track("Agency Profile Updated", {
