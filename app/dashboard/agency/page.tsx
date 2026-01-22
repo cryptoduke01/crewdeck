@@ -35,21 +35,34 @@ export default function AgencyDashboardPage() {
     }
   }, [user, authLoading, router]);
 
-  // Redirect KOLs to their dashboard
+  // Redirect KOLs to their dashboard - only if we're on agency page
   useEffect(() => {
-    if (agency && (agency as any)?.profile_type === "kol") {
-      router.replace("/dashboard/kol");
+    if (!authLoading && !agencyLoading && !user) {
+      router.push("/auth/login");
       return;
     }
-  }, [agency, router]);
 
-  // Refetch agency data when user is available (after auth loads)
-  useEffect(() => {
-    if (user && !authLoading) {
-      refetch();
+    if (!agencyLoading && agency && (agency as any)?.profile_type === "kol") {
+      // Check if we're actually on the agency page to prevent loops
+      if (typeof window !== "undefined" && window.location.pathname === "/dashboard/agency") {
+        router.replace("/dashboard/kol");
+      }
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading]); // Run when user/auth state changes
+
+    // If no agency and user exists, redirect to edit page based on user metadata
+    if (!agencyLoading && !agency && user) {
+      const profileType = (user.user_metadata?.profile_type as string) || "agency";
+      if (profileType === "kol") {
+        router.replace("/dashboard/kol/edit");
+      } else {
+        router.replace("/dashboard/agency/edit");
+      }
+    }
+  }, [user, authLoading, agency, agencyLoading, router]);
+
+  // Don't refetch unnecessarily - useMyAgency handles it automatically
+  // Removing this to prevent infinite loops and abort errors
 
   useEffect(() => {
     async function fetchStats() {
@@ -77,7 +90,8 @@ export default function AgencyDashboardPage() {
     fetchStats();
   }, [user, agency]);
 
-  if (authLoading || agencyLoading) {
+  // Only show loading on initial load, not on re-renders
+  if (authLoading || (agencyLoading && !agency && user)) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -86,8 +100,14 @@ export default function AgencyDashboardPage() {
     );
   }
 
+  // Redirect if not authenticated
   if (!user) {
-    return null;
+    return null; // useEffect will handle redirect
+  }
+
+  // If user is a KOL, redirect immediately (before rendering)
+  if (agency && (agency as any)?.profile_type === "kol") {
+    return null; // useEffect will handle redirect
   }
 
   // If no agency exists, show setup banner

@@ -1,26 +1,76 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth/context";
 import { Agency } from "@/hooks/use-agency";
+
+// Global cache to prevent duplicate fetches
+let profileCache: {
+  userId: string | null;
+  data: Agency | null;
+  timestamp: number;
+} = {
+  userId: null,
+  data: null,
+  timestamp: 0,
+};
+
+const CACHE_DURATION = 30000; // 30 seconds cache
 
 export function useMyAgency() {
   const [agency, setAgency] = useState<Agency | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
+    let isMounted = true;
+    let fetchTimeout: NodeJS.Timeout | null = null;
+    let isFetching = false;
+
     async function fetchMyAgency() {
       if (!user) {
-        setLoading(false);
+        if (isMounted) {
+          setAgency(null);
+          setLoading(false);
+        }
+        return;
+      }
+
+      // Check cache first
+      const now = Date.now();
+      if (
+        profileCache.userId === user.id &&
+        profileCache.data &&
+        (now - profileCache.timestamp) < CACHE_DURATION
+      ) {
+        if (isMounted) {
+          setAgency(profileCache.data);
+          setLoading(false);
+        }
+        return;
+      }
+
+      // Prevent multiple simultaneous fetches
+      if (isFetching) {
+        // If we have cached data, use it while waiting
+        if (profileCache.userId === user.id && profileCache.data) {
+          if (isMounted) {
+            setAgency(profileCache.data);
+            setLoading(false);
+          }
+        }
         return;
       }
 
       try {
-        setLoading(true);
-        setError(null);
+        isFetching = true;
+        if (isMounted) {
+          setLoading(true);
+          setError(null);
+        }
 
         const supabase = createSupabaseClient();
 
@@ -30,14 +80,19 @@ export function useMyAgency() {
           .select("*")
           .eq("user_id", user.id)
           .maybeSingle();
+        
+        // Check if component is still mounted
+        if (!isMounted) return;
 
         // Log for debugging
         if (profileError) {
           // If it's a "no rows" error, that's okay - user just doesn't have a profile yet
           if (profileError.code === 'PGRST116' || profileError.message?.includes('No rows')) {
             // This is expected - user doesn't have a profile yet
-            setAgency(null);
-            setLoading(false);
+            if (isMounted) {
+              setAgency(null);
+              setLoading(false);
+            }
             return;
           }
           // For other errors, log and throw
@@ -58,15 +113,19 @@ export function useMyAgency() {
           console.log("No profile found for user:", user.id);
         }
 
-      if (profileData) {
-        // Fetch services (only for agencies, KOLs don't have services)
-        let services: string[] = [];
-        if (profileData.profile_type !== "kol") {
-          try {
-            const { data: servicesData, error: servicesError } = await supabase
-              .from("services")
-              .select("name")
-              .eq("profile_id", profileData.id);
+        if (!isMounted) return;
+
+        if (profileData) {
+          // Fetch services (only for agencies, KOLs don't have services)
+          let services: string[] = [];
+          if (profileData.profile_type !== "kol") {
+            try {
+              const { data: servicesData, error: servicesError } = await supabase
+                .from("services")
+                .select("name")
+                .eq("profile_id", profileData.id);
+              
+              if (!isMounted) return;
 
             if (servicesError) {
               // If column doesn't exist yet, services will be empty
@@ -113,11 +172,31 @@ export function useMyAgency() {
             price_per_space: profileData.price_per_space,
           };
 
-          setAgency(transformedProfile);
+          // Update cache
+          profileCache = {
+            userId: user.id,
+            data: transformedProfile,
+            timestamp: Date.now(),
+          };
+
+          if (isMounted) {
+            setAgency(transformedProfile);
+          }
         } else {
-          setAgency(null);
+          // Update cache with null
+          profileCache = {
+            userId: user.id,
+            data: null,
+            timestamp: Date.now(),
+          };
+
+          if (isMounted) {
+            setAgency(null);
+          }
         }
       } catch (err) {
+        if (!isMounted) return;
+        
         // Better error logging
         if (err instanceof Error) {
           console.error("Error fetching agency:", err.message, err);
@@ -131,11 +210,23 @@ export function useMyAgency() {
           setError("Failed to fetch agency");
         }
       } finally {
-        setLoading(false);
+        isFetching = false;
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
 
-    fetchMyAgency();
+    // Debounce the fetch to prevent rapid calls
+    fetchTimeout = setTimeout(() => {
+      fetchMyAgency();
+    }, 100);
+
+    return () => {
+      isMounted = false;
+      isFetching = false;
+      if (fetchTimeout) clearTimeout(fetchTimeout);
+    };
   }, [user]);
 
   const refetch = async () => {

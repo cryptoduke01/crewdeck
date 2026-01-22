@@ -150,7 +150,7 @@ export function welcomeEmail(agencyName: string, dashboardUrl: string): EmailTem
         </div>
         <div style="background: #fff; border-radius: 8px; padding: 30px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
           <h1 style="margin: 0 0 10px 0; font-size: 24px; color: #000;">Welcome to crewdeck!</h1>
-          <p style="margin: 0; color: #666; font-size: 14px;">Your agency profile is ready</p>
+          <p style="margin: 0; color: #666; font-size: 14px;">Your account has been created</p>
         </div>
         
         <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; margin-bottom: 20px;">
@@ -159,18 +159,24 @@ export function welcomeEmail(agencyName: string, dashboardUrl: string): EmailTem
           </p>
           
           <p style="margin: 0 0 16px 0; font-size: 16px;">
-            Welcome to crewdeck! Your agency profile has been created and you're all set to start receiving inquiries from potential clients.
+            Welcome to crewdeck! Your account has been created successfully. Your profile is currently pending verification, which typically takes less than 2 hours.
           </p>
           
+          <div style="background: #fef3c7; border-left: 3px solid #f59e0b; padding: 16px; margin: 20px 0; border-radius: 4px;">
+            <p style="margin: 0; font-size: 14px; color: #92400e;">
+              <strong>⏳ Verification Pending:</strong> Your profile will be reviewed and verified by our team. You'll receive an email notification once verification is complete (usually within 2 hours).
+            </p>
+          </div>
+          
           <p style="margin: 0 0 16px 0; font-size: 16px;">
-            Here's what you can do next:
+            In the meantime, you can:
           </p>
           
           <ul style="margin: 0 0 20px 0; padding-left: 20px;">
-            <li style="margin-bottom: 8px;">Complete your agency profile with services and portfolio</li>
+            <li style="margin-bottom: 8px;">Complete your profile with services and portfolio</li>
             <li style="margin-bottom: 8px;">Add your pricing information</li>
             <li style="margin-bottom: 8px;">Upload portfolio items to showcase your work</li>
-            <li>Start receiving inquiries from potential clients</li>
+            <li>Set up your profile to speed up the verification process</li>
           </ul>
           
           <a href="${dashboardUrl}" style="display: inline-block; background: #000; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500; margin-top: 16px;">
@@ -190,13 +196,15 @@ Welcome to crewdeck!
 
 Hi ${agencyName},
 
-Welcome to crewdeck! Your agency profile has been created and you're all set to start receiving inquiries from potential clients.
+Welcome to crewdeck! Your account has been created successfully. Your profile is currently pending verification, which typically takes less than 2 hours.
 
-Here's what you can do next:
-- Complete your agency profile with services and portfolio
+⏳ Verification Pending: Your profile will be reviewed and verified by our team. You'll receive an email notification once verification is complete (usually within 2 hours).
+
+In the meantime, you can:
+- Complete your profile with services and portfolio
 - Add your pricing information
 - Upload portfolio items to showcase your work
-- Start receiving inquiries from potential clients
+- Set up your profile to speed up the verification process
 
 Go to your dashboard: ${dashboardUrl}
 

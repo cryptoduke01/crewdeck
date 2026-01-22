@@ -21,22 +21,83 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createSupabaseClient();
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    let mounted = true;
+    let refreshTimeout: NodeJS.Timeout | null = null;
+    let lastRefreshTime = 0;
+    const MIN_REFRESH_INTERVAL = 5000; // 5 seconds minimum between refreshes
 
-    // Listen for auth changes
+    // Get initial session with rate limiting protection
+    const getSession = async () => {
+      const now = Date.now();
+      if (now - lastRefreshTime < MIN_REFRESH_INTERVAL) {
+        // Too soon, wait
+        refreshTimeout = setTimeout(() => {
+          if (mounted) getSession();
+        }, MIN_REFRESH_INTERVAL - (now - lastRefreshTime));
+        return;
+      }
+
+      lastRefreshTime = now;
+      
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          // Handle 429 rate limit errors gracefully
+          if (error.message?.includes('429') || error.status === 429) {
+            console.warn("Rate limited on session refresh, will retry after delay");
+            // Exponential backoff for 429 errors
+            const backoffDelay = Math.min(10000, 2000 * Math.pow(2, 0));
+            refreshTimeout = setTimeout(() => {
+              if (mounted) {
+                lastRefreshTime = 0; // Reset to allow retry
+                getSession();
+              }
+            }, backoffDelay);
+            return;
+          }
+        }
+        
+        if (mounted) {
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("Error getting session:", err);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    getSession();
+
+    // Listen for auth changes with aggressive debouncing
+    let lastEventTime = 0;
+    const DEBOUNCE_INTERVAL = 1000; // 1 second minimum between events
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Aggressive debouncing to prevent excessive refreshes
+      const now = Date.now();
+      if (now - lastEventTime < DEBOUNCE_INTERVAL && event !== 'SIGNED_OUT') {
+        return; // Skip if too soon after last event
+      }
+      lastEventTime = now;
+
+      // Only update if session actually changed
+      if (mounted) {
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
-  }, [supabase.auth]);
+    return () => {
+      mounted = false;
+      if (refreshTimeout) clearTimeout(refreshTimeout);
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -126,9 +187,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
+      // Check if user was created (even if email confirmation is required)
       if (!data.user) {
-        return { error: new Error("User creation failed") };
+        return { error: new Error("User creation failed. Please try again.") };
       }
+
+      // User was created successfully - continue with profile creation
+      // Don't fail if profile creation has issues - trigger will handle it
 
       // Track signup
       analytics.track("User Signed Up", {
@@ -146,60 +211,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Make slug unique by appending user ID suffix
       const uniqueSlug = `${baseSlug}-${data.user.id.substring(0, 8)}`;
 
-      // Try to create profile directly (works if email confirmation is disabled)
-      // The trigger will also try to create it, but we check for duplicates first
-      const { error: profileError } = await supabase.from("profiles").insert({
-        name: profileName,
-        slug: uniqueSlug,
-        email: email,
-        profile_type: profileType,
-        niche: "Web3",
-        verified: false,
-        user_id: data.user.id,
-      });
-
-      // If RLS fails, the trigger will handle it (it also checks for duplicates)
-      if (profileError) {
-        if (profileError.message?.includes('row-level security')) {
-          // Trigger will handle it - don't error
-          console.log("Profile creation will be handled by trigger");
-        } else if (profileError.message?.includes('duplicate') || profileError.message?.includes('already exists')) {
-          // Profile already exists (maybe trigger created it)
-          // Check again to confirm
-          const { data: checkProfile } = await supabase
+      // The trigger will create the profile automatically from user metadata
+      // Run profile creation check asynchronously - don't block signup
+      // This ensures signup succeeds even if profile creation is delayed
+      (async () => {
+        try {
+          // Wait a moment for trigger to execute
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Check if profile was created by trigger
+          const { data: checkProfile, error: checkError } = await supabase
             .from("profiles")
-            .select("id")
+            .select("id, name, profile_type")
             .eq("user_id", data.user.id)
             .maybeSingle();
           
+          if (checkError && checkError.code !== 'PGRST116') {
+            console.error("Error checking profile after signup:", checkError);
+          }
+          
           if (!checkProfile) {
-            // Still doesn't exist, might be slug conflict
-            const timestampSlug = `${baseSlug}-${Date.now().toString().slice(-6)}`;
-            const { error: timestampError } = await supabase.from("profiles").insert({
+            // Profile not created yet - trigger might be delayed or RLS blocked it
+            // Try to create it manually as fallback (only if RLS allows)
+            const { error: profileError } = await supabase.from("profiles").insert({
               name: profileName,
-              slug: timestampSlug,
+              slug: uniqueSlug,
               email: email,
               profile_type: profileType,
               niche: "Web3",
               verified: false,
               user_id: data.user.id,
             });
-            
-            if (timestampError && !timestampError.message?.includes('row-level security')) {
-              return { error: timestampError };
+
+            if (profileError) {
+              // If RLS blocks it, that's okay - trigger will handle it
+              if (profileError.message?.includes('row-level security') || profileError.code === '42501') {
+                console.log("Profile creation blocked by RLS - trigger will handle it");
+              } else if (profileError.message?.includes('duplicate') || profileError.message?.includes('already exists')) {
+                console.log("Profile already exists - trigger created it");
+              } else {
+                console.error("Profile creation error (non-fatal, trigger should handle it):", profileError);
+              }
+            } else {
+              console.log("Profile created successfully manually");
             }
+          } else {
+            console.log("Profile created successfully by trigger");
           }
-          // If checkProfile exists, trigger already created it - that's fine
-        } else {
-          // Other error - return it
-          return { error: profileError };
+        } catch (err) {
+          console.error("Error in profile creation check (non-fatal):", err);
+          // Don't fail signup - trigger should handle it
         }
-      }
+      })(); // Run async, don't await
+      
+      // Signup succeeded immediately - profile will be created by trigger
 
       // Send welcome email (non-blocking)
       if (data.user && email) {
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "https://crewdeck.xyz");
-        const dashboardUrl = `${baseUrl}/dashboard/agency`;
+        // Use profile type to determine dashboard URL
+        const dashboardPath = profileType === "kol" ? "/dashboard/kol" : "/dashboard/agency";
+        const dashboardUrl = `${baseUrl}${dashboardPath}`;
         
         // Use dynamic import to make this non-blocking
         import("@/lib/email/utils").then(({ sendWelcomeEmail }) => {

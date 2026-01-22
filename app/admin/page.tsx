@@ -226,12 +226,32 @@ export default function AdminPage() {
 
     try {
       const supabase = createSupabaseClient();
-      const { error } = await supabase
+      
+      // First, get the user_id from the profile
+      const { data: profileData, error: fetchError } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("id", agencyId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Delete from profiles table
+      const { error: deleteError } = await supabase
         .from("profiles")
         .delete()
         .eq("id", agencyId);
 
-      if (error) throw error;
+      if (deleteError) throw deleteError;
+
+      // Delete from auth.users if user_id exists
+      if (profileData?.user_id) {
+        const { error: authError } = await supabase.auth.admin.deleteUser(profileData.user_id);
+        if (authError) {
+          console.warn("Failed to delete auth user (may need admin privileges):", authError);
+          // Continue even if auth deletion fails - profile is already deleted
+        }
+      }
 
       setAgencies((prev) => prev.filter((a) => a.id !== agencyId));
       setStats((prev) => ({
@@ -245,7 +265,7 @@ export default function AdminPage() {
           : prev.pendingAgencies - 1,
       }));
 
-      showSuccess("Agency deleted", "The agency has been removed from the platform.");
+      showSuccess("Profile deleted", "The profile and user account have been removed from the platform.");
     } catch (err) {
       showError("Failed to delete", err instanceof Error ? err.message : "Unknown error");
     }

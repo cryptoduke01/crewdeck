@@ -7,10 +7,20 @@ export function Loading() {
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-center">
         <motion.div
-          className="w-8 h-8 border-2 border-foreground/20 border-t-foreground rounded-full mx-auto mb-4"
+          className="w-12 h-12 border-3 border-foreground/20 border-t-foreground rounded-full mx-auto mb-4"
           animate={{ rotate: 360 }}
-          transition={{ duration: 0.6, repeat: Infinity, ease: "linear" }}
+          transition={{ 
+            duration: 0.8, 
+            repeat: Infinity, 
+            ease: "linear",
+            repeatType: "loop"
+          }}
+          style={{ 
+            borderWidth: "3px",
+            borderTopWidth: "3px"
+          }}
         />
+        <p className="text-sm text-foreground/60">Loading...</p>
       </div>
     </div>
   );

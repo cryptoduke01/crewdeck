@@ -32,10 +32,11 @@ export default function LoginPage() {
       showError("Sign in failed", error.message);
       setLoading(false);
     } else {
-      showSuccess("Welcome back!", "Redirecting to dashboard...", 1500);
+      showSuccess("Welcome back!", "Redirecting to dashboard...", 500);
+      // Small delay to ensure session is established before redirect
       setTimeout(() => {
-        router.push("/dashboard/agency");
-      }, 1500);
+        router.push("/dashboard");
+      }, 800);
     }
   };
 

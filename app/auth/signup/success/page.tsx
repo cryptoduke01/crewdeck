@@ -66,7 +66,12 @@ function SignupSuccessContent() {
             </div>
 
             <Button
-              onClick={() => router.push("/dashboard")}
+              onClick={() => {
+                // Small delay to ensure session is established
+                setTimeout(() => {
+                  router.push("/dashboard");
+                }, 300);
+              }}
               className="w-full cursor-pointer"
               size="lg"
             >

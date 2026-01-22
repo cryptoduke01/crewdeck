@@ -32,15 +32,28 @@ export default function KOLDashboardPage() {
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/auth/login");
+      return;
     }
-  }, [user, authLoading, router]);
 
-  // Redirect KOLs away from agency dashboard
-  useEffect(() => {
-    if (agency && (agency as any)?.profile_type !== "kol") {
-      router.replace("/dashboard/agency");
+    // Redirect non-KOLs to their dashboard - only if we're on KOL page
+    if (!agencyLoading && agency && (agency as any)?.profile_type !== "kol") {
+      // Check if we're actually on the KOL page to prevent loops
+      if (typeof window !== "undefined" && window.location.pathname === "/dashboard/kol") {
+        router.replace("/dashboard/agency");
+      }
+      return;
     }
-  }, [agency, router]);
+
+    // If no agency and user exists, redirect to edit page
+    if (!agencyLoading && !agency && user) {
+      const profileType = (user.user_metadata?.profile_type as string) || "agency";
+      if (profileType === "kol") {
+        router.replace("/dashboard/kol/edit");
+      } else {
+        router.replace("/dashboard/agency/edit");
+      }
+    }
+  }, [user, authLoading, agency, agencyLoading, router]);
 
   useEffect(() => {
     async function fetchStats() {
@@ -68,7 +81,11 @@ export default function KOLDashboardPage() {
     fetchStats();
   }, [user, agency]);
 
-  if (authLoading || agencyLoading) {
+  // Don't refetch unnecessarily - let useMyAgency handle it
+  // Removing refetch calls to prevent infinite loops
+
+  // Only show loading on initial load, not on re-renders
+  if (authLoading || (agencyLoading && !agency && user)) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -78,6 +95,12 @@ export default function KOLDashboardPage() {
   }
 
   if (!user) {
+    return null;
+  }
+
+  // If user is not a KOL, redirect immediately (before rendering)
+  if (agency && (agency as any)?.profile_type !== "kol") {
+    // This will be handled by useEffect, but also check here
     return null;
   }
 

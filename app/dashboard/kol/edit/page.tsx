@@ -152,13 +152,8 @@ export default function EditProfilePage() {
       const supabase = createSupabaseClient();
 
       // Parse price ranges (store as full dollar amounts)
-      // Handle empty strings and invalid values properly
-      const priceMin = formData.priceRangeMin && formData.priceRangeMin.trim()
-        ? (parseInt(formData.priceRangeMin) || null)
-        : null;
-      const priceMax = formData.priceRangeMax && formData.priceRangeMax.trim()
-        ? (parseInt(formData.priceRangeMax) || null)
-        : null;
+      const priceMin = formData.priceRangeMin ? parseInt(formData.priceRangeMin) : null;
+      const priceMax = formData.priceRangeMax ? parseInt(formData.priceRangeMax) : null;
 
       // Generate unique slug
       let baseSlug = formData.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
@@ -305,58 +300,28 @@ export default function EditProfilePage() {
           updateData.logo_url = formData.logo_url;
         }
 
-        // Only include fields relevant to profile type
-        if (profileType === "kol") {
-          // KOL-specific fields only
-          updateData.twitter_handle = formData.twitterHandle || null;
-          updateData.twitter_followers = formData.twitterFollowers && formData.twitterFollowers.trim() 
-            ? parseInt(formData.twitterFollowers) || null 
-            : null;
-          updateData.engagement_rate = formData.engagementRate && formData.engagementRate.trim()
-            ? parseFloat(formData.engagementRate) || null
-            : null;
-          updateData.content_types = formData.contentTypes || [];
-          updateData.price_per_thread = formData.pricePerThread && formData.pricePerThread.trim()
-            ? parseInt(formData.pricePerThread) || null
-            : null;
-          updateData.price_per_video = formData.pricePerVideo && formData.pricePerVideo.trim()
-            ? parseInt(formData.pricePerVideo) || null
-            : null;
-          updateData.price_per_space = formData.pricePerSpace && formData.pricePerSpace.trim()
-            ? parseInt(formData.pricePerSpace) || null
-            : null;
-        } else {
-          // Agency-specific fields only
-          updateData.founded = formData.founded && formData.founded.trim()
-            ? parseInt(formData.founded) || null
-            : null;
-          updateData.team_size = formData.teamSize && formData.teamSize.trim()
-            ? parseInt(formData.teamSize) || null
-            : null;
+        // Agency-specific fields
+        if (profileType !== "kol") {
+          updateData.founded = formData.founded ? parseInt(formData.founded) : null;
+          updateData.team_size = formData.teamSize || null;
           updateData.price_range_min = priceMin;
           updateData.price_range_max = priceMax;
         }
 
-        // Clean update data - remove undefined values and handle NaN/null properly
-        const cleanUpdateData: any = {};
-        Object.keys(updateData).forEach(key => {
-          const value = updateData[key];
-          // Only include defined values, and convert NaN to null
-          if (value !== undefined) {
-            if (typeof value === 'number' && isNaN(value)) {
-              cleanUpdateData[key] = null;
-            } else {
-              cleanUpdateData[key] = value;
-            }
-          }
-        });
-
-        // Log for debugging
-        console.log("Updating profile with data:", cleanUpdateData);
+        // KOL-specific fields
+        if (profileType === "kol") {
+          updateData.twitter_handle = formData.twitterHandle || null;
+          updateData.twitter_followers = formData.twitterFollowers ? parseInt(formData.twitterFollowers) : null;
+          updateData.engagement_rate = formData.engagementRate ? parseFloat(formData.engagementRate) : null;
+          updateData.content_types = formData.contentTypes || [];
+          updateData.price_per_thread = formData.pricePerThread ? parseInt(formData.pricePerThread) : null;
+          updateData.price_per_video = formData.pricePerVideo ? parseInt(formData.pricePerVideo) : null;
+          updateData.price_per_space = formData.pricePerSpace ? parseInt(formData.pricePerSpace) : null;
+        }
 
         const { error: profileError } = await supabase
           .from("profiles")
-          .update(cleanUpdateData)
+          .update(updateData)
           .eq("id", agency.id);
 
         if (profileError) throw profileError;
@@ -556,9 +521,7 @@ export default function EditProfilePage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full px-4 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all resize-none"
-                  placeholder={(agency as any)?.profile_type === "kol" 
-                    ? "Your captivating bio - tell your story, what you do, and why projects should work with you..." 
-                    : "Describe your agency and what makes it unique..."}
+                  placeholder="Describe your agency and what makes it unique..."
                 />
               </div>
 
